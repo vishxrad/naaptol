@@ -4,6 +4,7 @@ import { addMessages, getLLMThreadMessages } from "@/services/threadService";
 import { ChatCompletionMessageParam } from "openai/resources/chat/completions.mjs";
 import { serverConfig } from "@/config.server";
 import { makeC1Response } from "@thesysai/genui-sdk/server";
+import PostHogClient from "@/app/helpers/posthog";
 
 type ThreadId = string;
 
@@ -30,6 +31,8 @@ export async function POST(req: NextRequest) {
     apiKey: process.env.THESYS_API_KEY,
   });
 
+  const posthog = PostHogClient();
+
   const tools = await serverConfig.fetchTools(c1Response.writeThinkItem);
 
   const runToolsResponse = client.beta.chat.completions.runTools({
@@ -52,8 +55,28 @@ export async function POST(req: NextRequest) {
   const allRunToolsMessages: ChatCompletionMessageParam[] = [];
   let isError = false;
 
-  runToolsResponse.on("error", () => {
+  runToolsResponse.on("error", (openAIError) => {
     isError = true;
+
+    const errorDetails = {
+      prompt: prompt.content,
+      c1Response: c1Response.getAssistantMessage()?.content || "",
+      openAIError,
+      context,
+    } as const;
+
+    if (posthog) {
+      posthog.capture({
+        distinctId: threadId,
+        event: "analytics_demo_api_error",
+        properties: errorDetails,
+      });
+    } else {
+      console.error(
+        "There was an error while trying to generate the response:",
+        errorDetails
+      );
+    }
   });
 
   runToolsResponse.on("content", c1Response.writeContent);
