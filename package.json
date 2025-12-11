@@ -22,7 +22,7 @@
     "fuzzball": "^2.2.2",
     "lucide-react": "^0.469.0",
     "motion": "^12.12.1",
-    "next": "15.2.4",
+    "next": "15.2.6",
     "openai": "^4.103.0",
     "posthog-js": "^1.260.2",
     "posthog-node": "^5.9.2",
