@@ -76,7 +76,7 @@ export const ComposerInput = ({
   return (
     <div
       className={clsx(
-        "flex flex-col gap-m p-m border rounded-[18px] bg-container",
+        "flex flex-col gap-m p-m border rounded-[18px] bg-container w-3/4 mx-auto",
         composerDisabled && "bg-sunk",
         !isFocused && "border-interactive-el",
         isFocused && "border-emphasis",

@@ -19,20 +19,18 @@ interface SuggestionsProps {
 
 export const Suggestions = ({
   suggestions,
-  collapsed,
   executePrompt,
   pushQueryTitle,
   inputContainerRef,
 }: SuggestionsProps) => {
-  const [hovered, setHovered] = useState(false);
   const [bottomPosition, setBottomPosition] = useState(125); // fallback percentage
-  const expanded = !collapsed || hovered;
 
   useEffect(() => {
     if (!inputContainerRef?.current) return;
 
     const updatePosition = () => {
-      const containerHeight = inputContainerRef.current!.getBoundingClientRect().height;
+      const containerHeight =
+        inputContainerRef.current!.getBoundingClientRect().height;
       setBottomPosition(containerHeight + 12); // container height + 12px
     };
 
@@ -48,35 +46,23 @@ export const Suggestions = ({
   }, [inputContainerRef]);
 
   const suggestionClickHandler = (queryText: string, queryTitle?: string) => {
-    if (!expanded) {
-      setHovered(true);
-      return;
-    }
-
     pushQueryTitle(queryTitle ?? queryText);
     executePrompt(queryText);
-    setHovered(false);
   };
 
   return (
     <m.div
-      className={clsx(
-        "flex flex-col gap-[4px] absolute z-10 w-full pt-l delay-75 transition-all duration-300",
-        expanded && "bg-container"
-      )}
+      className="flex flex-row gap-s absolute z-10 w-3/4 left-1/2 -translate-x-1/2"
       style={{ bottom: `${bottomPosition}px` }}
-      initial={{ opacity: 0, display: "none" }}
-      animate={{ opacity: 1, display: "flex" }}
-      exit={{ opacity: 0, transitionEnd: { display: "none" } }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 10 }}
       transition={{ duration: 0.25, ease: "easeInOut" }}
     >
-      {suggestions.map((suggestion, index) => (
+      {suggestions.map((suggestion) => (
         <Suggestion
           key={suggestion.text}
           {...suggestion}
-          position={expanded ? 0 : suggestions.length - index - 1}
-          total={suggestions.length}
-          setHovered={setHovered}
           suggestionClickHandler={suggestionClickHandler}
         />
       ))}
@@ -88,9 +74,6 @@ interface SuggestionProps {
   title?: string;
   text: string;
   type: "investigate" | "analyze" | "explain";
-  position: number;
-  total: number;
-  setHovered: (hovered: boolean) => void;
   suggestionClickHandler: (queryText: string, queryTitle?: string) => void;
 }
 
@@ -98,40 +81,28 @@ const Suggestion = ({
   title,
   text,
   type,
-  position,
-  total,
-  setHovered,
   suggestionClickHandler,
 }: SuggestionProps) => {
   return (
     <div
-      className="px-l py-s flex items-center justify-between gap-s flex-nowrap border border-interactive-el rounded-xl shadow-lg hover:border-interactive-el-hover cursor-pointer group transition-all duration-150 bg-container delay-100"
-      style={{
-        transform: `translateY(calc(${position} * 90%))`,
-        zIndex: total - position,
-        scale: 1 - (position / total) * 0.1,
-      }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      className="flex-1 h-20 p-m flex flex-col justify-between border border-interactive-el rounded-2xl shadow-sm hover:shadow-md hover:border-interactive-el-hover cursor-pointer bg-container transition-all duration-200 hover:-translate-y-1"
       onClick={() => {
         suggestionClickHandler(text, title);
       }}
     >
-      <div className="flex items-center gap-m">
+      <div className="p-2 rounded-lg bg-sunk w-fit">
         {type === "investigate" && (
-          <TrendingUp className="text-blue-500" size={18} />
+          <TrendingUp className="text-blue-500" size={20} />
         )}
-        {type === "analyze" && <Users className="text-orange-500" size={18} />}
+        {type === "analyze" && <Users className="text-orange-500" size={20} />}
         {type === "explain" && (
-          <BadgePercent className="text-pink-500" size={18} />
+          <BadgePercent className="text-pink-500" size={20} />
         )}
-        <span className="text-primary">{text}</span>
       </div>
 
-      <ArrowRight
-        size={16}
-        className="text-secondary opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-      />
+      <span className="text-primary text-sm font-medium line-clamp-3 leading-snug">
+        {text}
+      </span>
     </div>
   );
 };
