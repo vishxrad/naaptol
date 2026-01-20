@@ -1,13 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useThreadActions, useThreadState } from "@crayonai/react-core";
 import { Suggestions, type Suggestion } from "./Suggestions";
-import { AnimatePresence } from "framer-motion";
 import { config } from "@/config";
-import { processSheetFile } from "@/services/sheetProcessor";
 import { ComposerInput } from "./ComposerInput";
-import { useFileDrag } from "@/hooks/useFileDrag";
-import { useFileHandler } from "@/hooks/useFileHandler";
-import type { JSONValue } from "@crayonai/stream";
+import { AnimatePresence } from "framer-motion";
 
 export const Composer = ({
   pushQueryTitle,
@@ -17,45 +13,17 @@ export const Composer = ({
   const { processMessage, onCancel } = useThreadActions();
   const { isRunning } = useThreadState();
   const { messages } = useThreadState();
-  const inputRef = useRef<HTMLTextAreaElement>(null);
   const [suggestions, setSuggestions] = useState<Suggestion[]>(
     messages.length === 0 ? config.prefilledSuggestions ?? [] : []
   );
   const inputContainerRef = useRef<HTMLDivElement>(null);
 
-  const {
-    files,
-    totalFileSize,
-    handleFileChange,
-    handleFilesDropped,
-    removeFile,
-    clearFiles,
-    processFiles,
-    isAtSizeLimit,
-  } = useFileHandler();
-
-  const { isDragging, dragHandlers } = useFileDrag({
-    onFilesDropped: handleFilesDropped,
-  });
-
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
   const executePrompt = async (prompt: string) => {
-    const contexts = await processFiles(async (file) => {
-      const result = await processSheetFile(file);
-      return result.content;
-    });
-
     processMessage({
       type: "prompt",
       role: "user",
       message: prompt,
-      context: contexts.length > 0 ? contexts as JSONValue[] : undefined,
     });
-
-    clearFiles();
   };
 
   useEffect(() => {
@@ -65,38 +33,8 @@ export const Composer = ({
       setSuggestions([]);
       return;
     }
-
-    const latestMessage = messages[messages.length - 1];
-
-    let messageText: string | null = null;
-
-    if (typeof latestMessage.message === "string") {
-      messageText = latestMessage.message;
-    } else if (Array.isArray(latestMessage.message)) {
-      messageText = latestMessage.message
-        .map((m: unknown) => (typeof m === "string" ? m : JSON.stringify(m)))
-        .join(" ");
-    } else if (
-      latestMessage.message &&
-      typeof latestMessage.message === "object"
-    ) {
-      messageText = JSON.stringify(latestMessage.message);
-    }
-
-    if (!messageText) {
-      return;
-    }
-
-    fetch("/api/relatedQueries", {
-      method: "POST",
-      body: JSON.stringify({
-        message: messageText,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setSuggestions(data.relatedQueries);
-      });
+    
+    // Related queries fetch removed as the endpoint is deprecated
   }, [isRunning, messages, messages.length]);
 
   return (
@@ -119,19 +57,6 @@ export const Composer = ({
         onSubmit={executePrompt}
         isRunning={isRunning}
         onCancel={onCancel}
-        fileState={{
-          files,
-          totalFileSize,
-          isAtSizeLimit,
-          handleFileChange,
-          handleFilesDropped,
-          removeFile,
-        }}
-        dragState={{
-          isDragging,
-          dragHandlers,
-        }}
-        onClearFiles={clearFiles}
       />
     </div>
   );

@@ -12,7 +12,17 @@ import { useEffect, useState } from "react";
 import { MessageGroup } from "./MessageGroup";
 import "@/custom.css";
 
-export const CopilotTray = () => {
+import { ChevronLeft } from "lucide-react";
+
+export interface CopilotTrayProps {
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
+}
+
+export const CopilotTray = ({
+  isCollapsed = false,
+  onToggleCollapse,
+}: CopilotTrayProps) => {
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const { messages } = useThreadState();
   const [queryTitles, setQueryTitles] = useState<string[]>([]);
@@ -45,15 +55,37 @@ export const CopilotTray = () => {
 
   const currentMessageGroup = groupedMessages[currentMessageIndex];
 
+  if (isCollapsed) {
+    return (
+      <div
+        className="w-12 h-full border-l border-default bg-container flex flex-col items-center py-4 cursor-pointer hover:bg-hover transition-colors pointer-events-auto"
+        onClick={onToggleCollapse}
+      >
+        <ChevronLeft size={24} className="text-secondary" />
+        <div className="mt-4 [writing-mode:vertical-rl] text-secondary font-medium tracking-wide">
+          StudentFin Copilot
+        </div>
+      </div>
+    );
+  }
+
   return (
     <m.div
       className={clsx(
-        "w-full md:w-5/12 h-full max-h-full flex flex-col bg-container overflow-hidden transition-all duration-300",
+        "relative w-full md:w-5/12 h-full max-h-full flex flex-col bg-container overflow-hidden transition-all duration-300 pointer-events-auto",
         groupedMessages.length === 0 &&
           "border-l border-default border-l-black/4",
         groupedMessages.length > 0 && "md:w-8/12"
       )}
     >
+      {onToggleCollapse && (
+        <button
+          onClick={onToggleCollapse}
+          className="absolute top-1/2 -left-3 z-50 bg-container border border-default rounded-full p-1 shadow-md hover:bg-hover hidden md:block"
+        >
+          <ChevronLeft size={16} className="rotate-180" />
+        </button>
+      )}
       <Header
         canGoToNext={
           groupedMessages.length > 0 &&

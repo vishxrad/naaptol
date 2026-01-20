@@ -8,8 +8,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Analytics + C1",
-  description: "Generative UI Analytics powered by Thesys C1",
+  title: "Student Funds Tracker",
+  description: "Track your study abroad funds easily",
 };
 
 export default function RootLayout({

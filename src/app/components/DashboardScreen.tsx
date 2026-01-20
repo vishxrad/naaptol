@@ -2,9 +2,9 @@ import { ChatProvider } from "@crayonai/react-core";
 import { useThreadListManager, useThreadManager } from "@thesysai/genui-sdk";
 import { usePathname, useRouter } from "next/navigation";
 import * as apiClient from "@/apiClient";
-import { CopilotTray } from "./CopilotTray";
+import { CopilotTray, CopilotTrayProps } from "./CopilotTray";
 
-export const DashboardScreen = () => {
+export const DashboardScreen = (props: CopilotTrayProps) => {
   const pathname = usePathname();
   const { replace } = useRouter();
 
@@ -38,7 +38,7 @@ export const DashboardScreen = () => {
       threadListManager={threadListManager}
       threadManager={threadManager}
     >
-      <CopilotTray />
+      <CopilotTray {...props} />
     </ChatProvider>
   );
 };

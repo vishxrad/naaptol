@@ -3,10 +3,11 @@
 import { ThemeProvider } from "@crayonai/react-ui";
 import "@crayonai/react-ui/styles/index.css";
 import { DashboardScreen } from "./components/DashboardScreen";
+import { StudentDashboard } from "./components/StudentDashboard";
 import { domAnimation, LazyMotion } from "framer-motion";
 import Image from "next/image";
 import { useTheme } from "./hooks/useTheme";
-import { NavBar } from "./components/Navbar";
+import { useState } from "react";
 
 export interface CardInfo {
   text: string; // card prompt
@@ -14,6 +15,7 @@ export interface CardInfo {
 
 export default function Home() {
   const theme = useTheme();
+  const [isChatCollapsed, setIsChatCollapsed] = useState(false);
 
   return (
     <LazyMotion features={domAnimation}>
@@ -22,40 +24,16 @@ export default function Home() {
         theme={{ defaultChartPalette: ["#4F46E5", "#7F56D9", "#1882FF"] }}
       >
         <div className="flex flex-col h-full w-full max-h-screen">
-          <NavBar />
-
-          <div className="flex w-full h-full max-h-full overflow-hidden justify-between">
-            <div className="hidden md:block w-2/3 brightness-40 relative group cursor-pointer">
-              {theme === "light" ? (
-                <Image
-                  src="/background.svg"
-                  alt="background"
-                  fill
-                  className="object-cover object-left-top"
-                  priority
-                />
-              ) : (
-                <Image
-                  src="/background-dark.svg"
-                  alt="background"
-                  fill
-                  className="object-cover object-left-top"
-                  priority
-                />
-              )}
-              <div className="absolute inset-0 bg-black bg-opacity-60 opacity-0 group-hover:opacity-80 transition-opacity duration-300 flex items-center justify-center">
-                <div className="text-white text-center p-8">
-                  <h3 className="text-2xl font-bold mb-4">
-                    This is a Preview Screen
-                  </h3>
-                  <p className="text-lg">
-                    You can ask the agent on the right about U.S. equities or
-                    current market movements
-                  </p>
-                </div>
-              </div>
+          <div className="relative w-full h-full max-h-full overflow-hidden">
+            <div className="hidden md:flex flex-col w-full h-full overflow-hidden pr-12">
+               <StudentDashboard />
             </div>
-            <DashboardScreen />
+            <div className="absolute top-0 right-0 h-full w-full pointer-events-none flex justify-end z-20">
+              <DashboardScreen
+                isCollapsed={isChatCollapsed}
+                onToggleCollapse={() => setIsChatCollapsed(!isChatCollapsed)}
+              />
+            </div>
           </div>
         </div>
       </ThemeProvider>

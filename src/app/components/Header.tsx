@@ -26,7 +26,7 @@ const Header: React.FC<HeaderProps> = ({
           height={36}
         />
         <p className="text-md text-primary">
-          FiMarket <span className="text-secondary">Copilot</span>
+          StudentFin <span className="text-secondary">Copilot</span>
         </p>
       </div>
 
