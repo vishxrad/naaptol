@@ -6,6 +6,7 @@ from thesys_genui_sdk.fast_api import with_c1_response
 from thread_store import thread_store
 from pydantic import BaseModel
 from typing import List, Dict, Any
+import pandas as pd
 
 app = FastAPI()
 
@@ -36,6 +37,17 @@ app.add_middleware(
 @app.get("/")
 def read_root():
     return {"status": "ok"}
+
+@app.get("/transactions")
+def get_transactions():
+    try:
+        df = pd.read_csv("student_transactions.csv")
+        # Clean up data for JSON serialization (handle NaN)
+        df = df.fillna(0)
+        return df.to_dict(orient="records")
+    except Exception as e:
+        print(f"Error reading transactions: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/chat")
 @with_c1_response()

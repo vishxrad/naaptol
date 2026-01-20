@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   BarChart, 
   Bar, 
@@ -24,31 +24,110 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 
-const spendingData = [
-  { name: 'Sep', budget: 2000, spent: 1800 },
-  { name: 'Oct', budget: 2000, spent: 2100 },
-  { name: 'Nov', budget: 2000, spent: 1750 },
-  { name: 'Dec', budget: 2500, spent: 2400 },
-  { name: 'Jan', budget: 2000, spent: 1600 },
-];
+const inferCategory = (desc: string) => {
+  const d = desc.toLowerCase();
+  if (d.includes('uber') || d.includes('taxi') || d.includes('flight')) return 'Transport';
+  if (d.includes('rent') || d.includes('apts')) return 'Rent';
+  if (d.includes('target') || d.includes('walmart') || d.includes('chipotle') || d.includes('dominos') || d.includes('starbucks') || d.includes('panda') || d.includes('grocery')) return 'Food';
+  if (d.includes('bookstore') || d.includes('textbooks')) return 'Books';
+  if (d.includes('wire') || d.includes('deposit')) return 'Income';
+  if (d.includes('ikea') || d.includes('h&m') || d.includes('amzn')) return 'Shopping';
+  return 'Entertainment';
+};
 
-const categoryData = [
-  { name: 'Rent', value: 1200, color: '#4F46E5' },
-  { name: 'Food', value: 450, color: '#10B981' },
-  { name: 'Transport', value: 150, color: '#F59E0B' },
-  { name: 'Books', value: 200, color: '#EF4444' },
-  { name: 'Entertainment', value: 300, color: '#8B5CF6' },
-];
+const getCategoryIcon = (category: string) => {
+  switch (category) {
+    case 'Rent': return Home;
+    case 'Food': return Coffee;
+    case 'Transport': return Plane;
+    case 'Books': return BookOpen;
+    case 'Income': return Wallet;
+    default: return CreditCard;
+  }
+};
 
-const transactions = [
-  { id: 1, title: 'Grocery Store', category: 'Food', amount: -45.50, date: 'Today', icon: Coffee },
-  { id: 2, title: 'Monthly Rent', category: 'Rent', amount: -1200.00, date: 'Yesterday', icon: Home },
-  { id: 3, title: 'Textbooks', category: 'Books', amount: -120.00, date: 'Jan 15', icon: BookOpen },
-  { id: 4, title: 'Flight Ticket', category: 'Travel', amount: -350.00, date: 'Jan 10', icon: Plane },
-  { id: 5, title: 'Part-time Work', category: 'Income', amount: +600.00, date: 'Jan 05', icon: Wallet },
-];
+const CATEGORY_COLORS: Record<string, string> = {
+  Rent: '#4F46E5',
+  Food: '#10B981',
+  Transport: '#F59E0B',
+  Books: '#EF4444',
+  Entertainment: '#8B5CF6',
+  Shopping: '#EC4899',
+  Income: '#6B7280'
+};
 
 export const StudentDashboard = () => {
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [spendingData, setSpendingData] = useState<any[]>([]);
+  const [categoryData, setCategoryData] = useState<any[]>([]);
+  const [balance, setBalance] = useState(0);
+  const [totalSpent, setTotalSpent] = useState(0);
+  const [dailyAvg, setDailyAvg] = useState(0);
+
+  useEffect(() => {
+    fetch('/api/transactions')
+      .then(res => res.json())
+      .then((data: any[]) => {
+        const processedTx = data.map((t, idx) => {
+          const cat = inferCategory(t.Description);
+          const credit = Number(t.Credit) || 0;
+          const debit = Number(t.Debit) || 0;
+          const amount = credit + debit;
+
+          return {
+             id: idx,
+             title: t.Description,
+             category: cat,
+             amount: amount,
+             date: t.Date,
+             icon: getCategoryIcon(cat)
+          };
+        }).reverse();
+        
+        setTransactions(processedTx.slice(0, 50)); 
+
+        const spendingMap = new Map();
+        processedTx.forEach(t => {
+           if (t.amount < 0) {
+             const dateObj = new Date(t.date);
+             const month = dateObj.toLocaleString('default', { month: 'short' });
+             spendingMap.set(month, (spendingMap.get(month) || 0) + Math.abs(t.amount));
+           }
+        });
+        
+        const newSpendingData = Array.from(spendingMap.entries()).map(([name, spent]) => ({
+            name,
+            budget: 2000, 
+            spent
+        }));
+        setSpendingData(newSpendingData);
+
+        const catMap = new Map();
+        processedTx.forEach(t => {
+           if (t.amount < 0) {
+              catMap.set(t.category, (catMap.get(t.category) || 0) + Math.abs(t.amount));
+           }
+        });
+        const newCategoryData = Array.from(catMap.entries()).map(([name, value]) => ({
+          name,
+          value,
+          color: CATEGORY_COLORS[name] || '#999'
+        }));
+        setCategoryData(newCategoryData);
+        
+        if (data.length > 0) {
+           setBalance(data[data.length - 1].Balance);
+           const totalS = processedTx.reduce((acc, t) => t.amount < 0 ? acc + Math.abs(t.amount) : acc, 0);
+           setTotalSpent(totalS);
+           const firstDate = new Date(data[0].Date);
+           const lastDate = new Date(data[data.length -1].Date);
+           const days = Math.max(1, (lastDate.getTime() - firstDate.getTime()) / (1000 * 3600 * 24));
+           setDailyAvg(totalS / days);
+        }
+
+      }).catch(e => console.error(e));
+  }, []);
+
   return (
     <div className="flex-1 h-full overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6 md:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -61,7 +140,7 @@ export const StudentDashboard = () => {
           </div>
           <div className="bg-white dark:bg-gray-800 p-2 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
             <span className="text-sm font-medium text-gray-500 dark:text-gray-400 mr-2">Current Balance:</span>
-            <span className="text-lg font-bold text-gray-900 dark:text-white">$3,450.00</span>
+            <span className="text-lg font-bold text-gray-900 dark:text-white">${balance.toFixed(2)}</span>
           </div>
         </div>
 
@@ -77,27 +156,27 @@ export const StudentDashboard = () => {
           />
           <KpiCard 
             title="Total Spent" 
-            amount="$1,450" 
-            subtext="72% of budget" 
+            amount={`$${totalSpent.toFixed(2)}`} 
+            subtext={`${ totalSpent > 0 ? ((totalSpent/2000)*100).toFixed(0) : 0 }% of budget`} 
             icon={CreditCard} 
-            trend="+12%" 
+            trend="" 
             trendUp={false} 
             color="text-orange-600"
           />
           <KpiCard 
             title="Remaining" 
-            amount="$550" 
-            subtext="For 10 days" 
+            amount={`$${(2000 - totalSpent).toFixed(2)}`} 
+            subtext="Remaining budget" 
             icon={DollarSign} 
-            trend="-5%" 
+            trend="" 
             trendUp={false} 
           />
           <KpiCard 
             title="Daily Avg" 
-            amount="$48.33" 
-            subtext="Target: $65.00" 
+            amount={`$${dailyAvg.toFixed(2)}`} 
+            subtext="Avg Spending" 
             icon={TrendingUp} 
-            trend="-15%" 
+            trend="" 
             trendUp={true} 
             color="text-green-600"
           />
@@ -152,7 +231,7 @@ export const StudentDashboard = () => {
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div className="text-center">
                   <span className="text-sm text-gray-500">Total</span>
-                  <div className="text-xl font-bold text-gray-900 dark:text-white">$2,300</div>
+                  <div className="text-xl font-bold text-gray-900 dark:text-white">${totalSpent.toFixed(2)}</div>
                 </div>
               </div>
             </div>
