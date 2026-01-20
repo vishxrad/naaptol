@@ -21,7 +21,7 @@ export interface CardInfo {
 
 export default function Home() {
   const theme = useTheme();
-  const [isChatCollapsed, setIsChatCollapsed] = useState(false);
+  const [isChatCollapsed, setIsChatCollapsed] = useState(true);
 
   return (
     <LazyMotion features={domAnimation}>
@@ -31,10 +31,10 @@ export default function Home() {
       >
         <div className="flex flex-col h-full w-full max-h-screen">
           <div className="relative w-full h-full max-h-full overflow-hidden">
-            <div className="hidden md:flex flex-col w-full h-full overflow-hidden pr-12">
+            <div className="hidden md:flex flex-col w-full h-full overflow-hidden">
                <StudentDashboard />
             </div>
-            <div className="absolute top-0 right-0 h-full w-full pointer-events-none flex justify-end z-20">
+            <div className="absolute bottom-0 left-0 w-full h-full pointer-events-none flex flex-col justify-end z-20">
               <DashboardScreen
                 isCollapsed={isChatCollapsed}
                 onToggleCollapse={() => setIsChatCollapsed(!isChatCollapsed)}

@@ -1,6 +1,6 @@
 import React from "react";
 import { IconButton } from "@crayonai/react-ui";
-import { ArrowRight, ArrowLeft } from "lucide-react";
+import { ArrowRight, ArrowLeft, ChevronDown } from "lucide-react";
 import Image from "next/image";
 
 interface HeaderProps {
@@ -8,6 +8,7 @@ interface HeaderProps {
   goToNext: () => void;
   canGoToPrevious: boolean;
   goToPrevious: () => void;
+  onClose?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -15,6 +16,7 @@ const Header: React.FC<HeaderProps> = ({
   goToNext,
   canGoToPrevious,
   goToPrevious,
+  onClose,
 }) => {
   return (
     <div className="flex justify-between items-center p-m border-b border-default">
@@ -45,6 +47,17 @@ const Header: React.FC<HeaderProps> = ({
           disabled={!canGoToNext}
           onClick={goToNext}
         />
+        {onClose && (
+          <div className="hidden md:flex items-center">
+            <div className="w-px h-6 bg-default mx-2" />
+            <IconButton
+              variant="secondary"
+              size="large"
+              icon={<ChevronDown />}
+              onClick={onClose}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

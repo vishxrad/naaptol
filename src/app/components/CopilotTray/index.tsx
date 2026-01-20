@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 import { MessageGroup } from "./MessageGroup";
 import "@/custom.css";
 
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, ChevronUp, ChevronDown } from "lucide-react";
 
 export interface CopilotTrayProps {
   isCollapsed?: boolean;
@@ -55,62 +55,55 @@ export const CopilotTray = ({
 
   const currentMessageGroup = groupedMessages[currentMessageIndex];
 
-  if (isCollapsed) {
-    return (
-      <div
-        className="w-12 h-full border-l border-default bg-container flex flex-col items-center py-4 cursor-pointer hover:bg-hover transition-colors pointer-events-auto"
-        onClick={onToggleCollapse}
-      >
-        <ChevronLeft size={24} className="text-secondary" />
-        <div className="mt-4 [writing-mode:vertical-rl] text-secondary font-medium tracking-wide">
-          StudentFin Copilot
-        </div>
-      </div>
-    );
-  }
-
   return (
     <m.div
       className={clsx(
-        "relative w-full md:w-5/12 h-full max-h-full flex flex-col bg-container overflow-hidden transition-all duration-300 pointer-events-auto",
-        groupedMessages.length === 0 &&
-          "border-l border-default border-l-black/4",
-        groupedMessages.length > 0 && "md:w-8/12"
+        "relative w-full flex flex-col bg-container overflow-hidden transition-all duration-300 pointer-events-auto",
+        isCollapsed
+          ? "h-12 border-t border-default flex-row items-center px-4 cursor-pointer hover:bg-hover"
+          : "h-full border-t border-default border-t-black/4"
       )}
+      onClick={isCollapsed ? onToggleCollapse : undefined}
     >
-      {onToggleCollapse && (
-        <button
-          onClick={onToggleCollapse}
-          className="absolute top-1/2 -left-3 z-50 bg-container border border-default rounded-full p-1 shadow-md hover:bg-hover hidden md:block"
-        >
-          <ChevronLeft size={16} className="rotate-180" />
-        </button>
-      )}
-      <Header
-        canGoToNext={
-          groupedMessages.length > 0 &&
-          currentMessageIndex < groupedMessages.length - 1
-        }
-        goToNext={() => setCurrentMessageIndex((curr) => curr + 1)}
-        canGoToPrevious={groupedMessages.length > 0 && currentMessageIndex > 0}
-        goToPrevious={() => setCurrentMessageIndex((curr) => curr - 1)}
-      />
-
-      {groupedMessages.length === 0 ? (
-        <WelcomeCard />
+      {isCollapsed ? (
+        <>
+          <ChevronUp size={24} className="text-secondary" />
+          <div className="ml-4 text-secondary font-medium tracking-wide">
+            StudentFin Copilot
+          </div>
+        </>
       ) : (
-        <div className="flex-1 min-h-0 overflow-auto py-l px-xl flex flex-col gap-xl pb-[108px]">
-          <MessageGroup
-            queryTitle={currentQueryTitle}
-            userMessage={currentMessageGroup?.userMessage}
-            assistantMessage={currentMessageGroup?.assistantMessage}
+        <>
+          <Header
+            canGoToNext={
+              groupedMessages.length > 0 &&
+              currentMessageIndex < groupedMessages.length - 1
+            }
+            goToNext={() => setCurrentMessageIndex((curr) => curr + 1)}
+            canGoToPrevious={
+              groupedMessages.length > 0 && currentMessageIndex > 0
+            }
+            goToPrevious={() => setCurrentMessageIndex((curr) => curr - 1)}
+            onClose={onToggleCollapse}
           />
-        </div>
-      )}
 
-      <div className="p-xl bg-none">
-        <Composer pushQueryTitle={pushQueryTitle} />
-      </div>
+          {groupedMessages.length === 0 ? (
+            <WelcomeCard />
+          ) : (
+            <div className="flex-1 min-h-0 overflow-auto py-l px-xl flex flex-col gap-xl pb-[108px]">
+              <MessageGroup
+                queryTitle={currentQueryTitle}
+                userMessage={currentMessageGroup?.userMessage}
+                assistantMessage={currentMessageGroup?.assistantMessage}
+              />
+            </div>
+          )}
+
+          <div className="p-xl bg-none">
+            <Composer pushQueryTitle={pushQueryTitle} />
+          </div>
+        </>
+      )}
     </m.div>
   );
 };
