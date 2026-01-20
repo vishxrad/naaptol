@@ -1,18 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer, 
-  PieChart, 
-  Pie, 
-  Cell 
-} from 'recharts';
-import { 
   Wallet, 
   CreditCard, 
   TrendingUp, 
@@ -20,18 +7,25 @@ import {
   Coffee, 
   Home, 
   BookOpen, 
-  Plane 
+  Plane,
+  ChevronLeft,
+  ChevronRight,
+  MessageSquare
 } from 'lucide-react';
 import clsx from 'clsx';
+// Import the action hook from crayon core
+import { useThreadActions } from "@crayonai/react-core";
+
+// --- Utility Functions ---
 
 const inferCategory = (desc: string) => {
   const d = desc.toLowerCase();
   if (d.includes('uber') || d.includes('taxi') || d.includes('flight')) return 'Transport';
   if (d.includes('rent') || d.includes('apts')) return 'Rent';
-  if (d.includes('target') || d.includes('walmart') || d.includes('chipotle') || d.includes('dominos') || d.includes('starbucks') || d.includes('panda') || d.includes('grocery')) return 'Food';
-  if (d.includes('bookstore') || d.includes('textbooks')) return 'Books';
+  if (d.includes('target') || d.includes('walmart') || d.includes('chipotle') || d.includes('dominos') || d.includes('starbucks') || d.includes('panda') || d.includes('grocery') || d.includes('trader') || d.includes('whole foods')) return 'Food';
+  if (d.includes('bookstore') || d.includes('textbooks') || d.includes('chegg')) return 'Books';
   if (d.includes('wire') || d.includes('deposit')) return 'Income';
-  if (d.includes('ikea') || d.includes('h&m') || d.includes('amzn')) return 'Shopping';
+  if (d.includes('ikea') || d.includes('h&m') || d.includes('amzn') || d.includes('nike')) return 'Shopping';
   return 'Entertainment';
 };
 
@@ -46,23 +40,152 @@ const getCategoryIcon = (category: string) => {
   }
 };
 
-const CATEGORY_COLORS: Record<string, string> = {
-  Rent: '#4F46E5',
-  Food: '#10B981',
-  Transport: '#F59E0B',
-  Books: '#EF4444',
-  Entertainment: '#8B5CF6',
-  Shopping: '#EC4899',
-  Income: '#6B7280'
+// --- Calendar Component ---
+
+const CalendarView = ({ transactions, onDateClick }: { transactions: any[], onDateClick: (date: string) => void }) => {
+  const [currentDate, setCurrentDate] = useState(new Date()); 
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  useEffect(() => {
+    if (!isInitialized && transactions.length > 0) {
+      const latestTx = transactions.reduce((latest, tx) => {
+        const txDate = new Date(tx.date);
+        return !latest || txDate > latest ? txDate : latest;
+      }, null as Date | null);
+
+      if (latestTx) {
+        setCurrentDate(latestTx);
+      }
+      setIsInitialized(true);
+    }
+  }, [transactions, isInitialized]);
+
+  const getDaysInMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+  };
+
+  const nextMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  };
+
+  const prevMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  };
+
+  const daysInMonth = getDaysInMonth(currentDate);
+  const firstDay = getFirstDayOfMonth(currentDate);
+  const monthYearString = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+  const txByDate = transactions.reduce((acc, tx) => {
+    if (!acc[tx.date]) acc[tx.date] = [];
+    acc[tx.date].push(tx);
+    return acc;
+  }, {} as Record<string, any[]>);
+
+  const renderCalendarCells = () => {
+    const cells = [];
+    
+    for (let i = 0; i < firstDay; i++) {
+      cells.push(<div key={`empty-${i}`} className="min-h-[100px] bg-gray-50/50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50" />);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const monthStr = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const dayStr = String(day).padStart(2, '0');
+      const dateKey = `${monthStr}/${dayStr}/${currentDate.getFullYear()}`;
+      
+      const dayTx = txByDate[dateKey] || [];
+      const totalSpent = dayTx.reduce((sum, t) => t.amount < 0 ? sum + Math.abs(t.amount) : sum, 0);
+      const totalIncome = dayTx.reduce((sum, t) => t.amount > 0 ? sum + t.amount : sum, 0);
+
+      cells.push(
+        <div 
+          key={day} 
+          onClick={() => onDateClick(dateKey)}
+          className="min-h-[100px] p-2 border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-gray-700/80 transition-all cursor-pointer relative group"
+        >
+          <div className="flex justify-between items-start mb-1">
+            <span className={clsx("text-sm font-semibold h-6 w-6 flex items-center justify-center rounded-full transition-colors", 
+              dayTx.length > 0 ? "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white group-hover:bg-blue-100 dark:group-hover:bg-blue-900" : "text-gray-500")}>
+              {day}
+            </span>
+            {dayTx.length > 0 && (
+              <div className="text-[10px] font-medium flex flex-col items-end">
+                {totalIncome > 0 && <span className="text-green-600">+{totalIncome.toFixed(0)}</span>}
+                {totalSpent > 0 && <span className="text-red-500">-{totalSpent.toFixed(0)}</span>}
+              </div>
+            )}
+          </div>
+          
+          <div className="space-y-1 mt-1">
+            {dayTx.map((tx, idx) => (
+              <div key={idx} className="flex items-center gap-1.5 text-[10px] text-gray-600 dark:text-gray-300 truncate" title={`${tx.title} ($${tx.amount})`}>
+                <div className={clsx("w-1.5 h-1.5 rounded-full flex-shrink-0", tx.amount > 0 ? "bg-green-500" : "bg-indigo-500")} />
+                <span className="truncate">{tx.title}</span>
+              </div>
+            ))}
+          </div>
+          
+           {/* Hover Action Hint */}
+           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity bg-white/60 dark:bg-black/40 backdrop-blur-[1px]">
+            <div className="bg-blue-600 text-white text-xs px-2 py-1 rounded shadow-sm flex items-center gap-1">
+               <MessageSquare size={12} />
+               <span>Ask Copilot</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return cells;
+  };
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <CreditCard size={20} className="text-indigo-500"/> 
+          Transaction Calendar
+        </h3>
+        <div className="flex items-center gap-4">
+          <span className="font-semibold text-gray-900 dark:text-white w-32 text-center select-none">{monthYearString}</span>
+          <div className="flex bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-0.5">
+            <button onClick={prevMonth} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md text-gray-600 dark:text-gray-300 transition-colors">
+              <ChevronLeft size={18} />
+            </button>
+            <div className="w-px bg-gray-200 dark:bg-gray-600 mx-0.5" />
+            <button onClick={nextMonth} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md text-gray-600 dark:text-gray-300 transition-colors">
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div className="p-4">
+        <div className="grid grid-cols-7 text-center text-xs font-semibold text-gray-400 dark:text-gray-500 mb-2 uppercase tracking-wide">
+          <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+        </div>
+        <div className="grid grid-cols-7 border-t border-l border-gray-100 dark:border-gray-700 rounded-lg overflow-hidden">
+          {renderCalendarCells()}
+        </div>
+      </div>
+    </div>
+  );
 };
 
-export const StudentDashboard = () => {
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [spendingData, setSpendingData] = useState<any[]>([]);
-  const [categoryData, setCategoryData] = useState<any[]>([]);
+// --- Main Dashboard ---
+
+export const StudentDashboard = ({ onOpenChat }: { onOpenChat?: () => void }) => {
+  const [allTransactions, setAllTransactions] = useState<any[]>([]);
   const [balance, setBalance] = useState(0);
   const [totalSpent, setTotalSpent] = useState(0);
   const [dailyAvg, setDailyAvg] = useState(0);
+
+  // Hook to control the chat
+  const { processMessage } = useThreadActions();
 
   useEffect(() => {
     fetch('/api/transactions')
@@ -82,38 +205,9 @@ export const StudentDashboard = () => {
              date: t.Date,
              icon: getCategoryIcon(cat)
           };
-        }).reverse();
-        
-        setTransactions(processedTx.slice(0, 50)); 
-
-        const spendingMap = new Map();
-        processedTx.forEach(t => {
-           if (t.amount < 0) {
-             const dateObj = new Date(t.date);
-             const month = dateObj.toLocaleString('default', { month: 'short' });
-             spendingMap.set(month, (spendingMap.get(month) || 0) + Math.abs(t.amount));
-           }
         });
         
-        const newSpendingData = Array.from(spendingMap.entries()).map(([name, spent]) => ({
-            name,
-            budget: 2000, 
-            spent
-        }));
-        setSpendingData(newSpendingData);
-
-        const catMap = new Map();
-        processedTx.forEach(t => {
-           if (t.amount < 0) {
-              catMap.set(t.category, (catMap.get(t.category) || 0) + Math.abs(t.amount));
-           }
-        });
-        const newCategoryData = Array.from(catMap.entries()).map(([name, value]) => ({
-          name,
-          value,
-          color: CATEGORY_COLORS[name] || '#999'
-        }));
-        setCategoryData(newCategoryData);
+        setAllTransactions(processedTx);
         
         if (data.length > 0) {
            setBalance(data[data.length - 1].Balance);
@@ -121,12 +215,37 @@ export const StudentDashboard = () => {
            setTotalSpent(totalS);
            const firstDate = new Date(data[0].Date);
            const lastDate = new Date(data[data.length -1].Date);
-           const days = Math.max(1, (lastDate.getTime() - firstDate.getTime()) / (1000 * 3600 * 24));
-           setDailyAvg(totalS / days);
+           const diffTime = Math.abs(lastDate.getTime() - firstDate.getTime());
+           const diffDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24))); 
+           setDailyAvg(totalS / diffDays);
         }
 
-      }).catch(e => console.error(e));
+      }).catch(e => console.error("Failed to load transactions", e));
   }, []);
+
+  const handleDateClick = (dateStr: string) => {
+    // 1. Filter data for context
+    const txForDate = allTransactions.filter(t => t.date === dateStr);
+    
+    // 2. Construct Prompt
+    let prompt = `Analyze my financial activity on ${dateStr}.`;
+    if (txForDate.length > 0) {
+      prompt += ` I had ${txForDate.length} transactions:\n`;
+      prompt += txForDate.map(t => `- ${t.title}: ${t.amount > 0 ? '+' : ''}$${t.amount}`).join('\n');
+    } else {
+      prompt += " I don't see any transactions for this specific day.";
+    }
+
+    // 3. Send to Chatbot
+    processMessage({
+      type: 'prompt',
+      role: 'user',
+      message: prompt
+    });
+
+    // 4. Open the Chat Tray
+    if (onOpenChat) onOpenChat();
+  };
 
   return (
     <div className="flex-1 h-full overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6 md:p-8">
@@ -182,83 +301,9 @@ export const StudentDashboard = () => {
           />
         </div>
 
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          {/* Main Chart: Spending vs Budget */}
-          <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Budget vs Spending</h3>
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={spendingData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6B7280' }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6B7280' }} />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#FFF', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
-                  />
-                  <Legend verticalAlign="top" height={36} iconType="circle" />
-                  <Bar dataKey="budget" name="Budget" fill="#E5E7EB" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="spent" name="Spent" fill="#4F46E5" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* Secondary Chart: Categories */}
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Spending by Category</h3>
-            <div className="h-[300px] w-full relative">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={categoryData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {categoryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend layout="horizontal" verticalAlign="bottom" align="center" />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="text-center">
-                  <span className="text-sm text-gray-500">Total</span>
-                  <div className="text-xl font-bold text-gray-900 dark:text-white">${totalSpent.toFixed(2)}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Transactions */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Transactions</h3>
-          <div className="space-y-4">
-            {transactions.map((tx) => (
-              <div key={tx.id} className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors">
-                <div className="flex items-center gap-4">
-                  <div className={clsx("p-3 rounded-full", tx.amount > 0 ? "bg-green-100 text-green-600" : "bg-indigo-50 text-indigo-600")}>
-                    <tx.icon size={20} />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">{tx.title}</p>
-                    <p className="text-sm text-gray-500">{tx.category} • {tx.date}</p>
-                  </div>
-                </div>
-                <span className={clsx("font-semibold", tx.amount > 0 ? "text-green-600" : "text-gray-900 dark:text-white")}>
-                  {tx.amount > 0 ? '+' : ''}{tx.amount.toFixed(2)}
-                </span>
-              </div>
-            ))}
-          </div>
+        {/* Calendar Section */}
+        <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <CalendarView transactions={allTransactions} onDateClick={handleDateClick} />
         </div>
 
       </div>

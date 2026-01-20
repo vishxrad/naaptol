@@ -3,8 +3,13 @@ import { useThreadListManager, useThreadManager } from "@thesysai/genui-sdk";
 import { usePathname, useRouter } from "next/navigation";
 import * as apiClient from "@/apiClient";
 import { CopilotTray, CopilotTrayProps } from "./CopilotTray";
+import { ReactNode } from "react";
 
-export const DashboardScreen = (props: CopilotTrayProps) => {
+interface DashboardScreenProps extends CopilotTrayProps {
+  children?: ReactNode;
+}
+
+export const DashboardScreen = ({ children, ...props }: DashboardScreenProps) => {
   const pathname = usePathname();
   const { replace } = useRouter();
 
@@ -38,7 +43,17 @@ export const DashboardScreen = (props: CopilotTrayProps) => {
       threadListManager={threadListManager}
       threadManager={threadManager}
     >
-      <CopilotTray {...props} />
+      <div className="relative w-full h-full overflow-hidden">
+        {/* Main Content Area (StudentDashboard will go here) */}
+        <div className="w-full h-full overflow-hidden">
+          {children}
+        </div>
+
+        {/* Chat Overlay */}
+        <div className="absolute bottom-0 left-0 w-full h-full pointer-events-none flex flex-col justify-end z-20">
+          <CopilotTray {...props} />
+        </div>
+      </div>
     </ChatProvider>
   );
 };
