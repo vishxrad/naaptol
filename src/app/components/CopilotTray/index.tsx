@@ -1,4 +1,4 @@
-import { m, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence, useDragControls, PanInfo } from "framer-motion";
 import clsx from "clsx";
 import Header from "../Header";
 import { Composer } from "../Composer";
@@ -26,6 +26,7 @@ export const CopilotTray = ({
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const { messages = [] } = useThreadState();
   const [queryTitles, setQueryTitles] = useState<string[]>([]);
+  const dragControls = useDragControls();
 
   const groupedMessages: {
     userMessage: UserMessage;
@@ -58,6 +59,16 @@ export const CopilotTray = ({
   return (
     <m.div
       layout
+      drag={!isCollapsed ? "y" : false}
+      dragControls={dragControls}
+      dragListener={false}
+      dragConstraints={{ top: 0, bottom: 0 }}
+      dragElastic={{ top: 0, bottom: 0.2 }}
+      onDragEnd={(_: any, info: PanInfo) => {
+        if (info.offset.y > 50 || info.velocity.y > 300) {
+          onToggleCollapse?.();
+        }
+      }}
       className={clsx(
         "relative flex flex-col overflow-hidden transition-all duration-500 ease-in-out pointer-events-auto z-50",
         isCollapsed
@@ -106,18 +117,20 @@ export const CopilotTray = ({
       ) : (
         /* --- Expanded Chat Interface --- */
         <>
-          <Header
-            canGoToNext={
-              groupedMessages.length > 0 &&
-              currentMessageIndex < groupedMessages.length - 1
-            }
-            goToNext={() => setCurrentMessageIndex((curr) => curr + 1)}
-            canGoToPrevious={
-              groupedMessages.length > 0 && currentMessageIndex > 0
-            }
-            goToPrevious={() => setCurrentMessageIndex((curr) => curr - 1)}
-            onClose={onToggleCollapse}
-          />
+          <div onPointerDown={(e) => dragControls.start(e)} className="touch-none cursor-grab active:cursor-grabbing">
+            <Header
+              canGoToNext={
+                groupedMessages.length > 0 &&
+                currentMessageIndex < groupedMessages.length - 1
+              }
+              goToNext={() => setCurrentMessageIndex((curr) => curr + 1)}
+              canGoToPrevious={
+                groupedMessages.length > 0 && currentMessageIndex > 0
+              }
+              goToPrevious={() => setCurrentMessageIndex((curr) => curr - 1)}
+              onClose={onToggleCollapse}
+            />
+          </div>
 
           {groupedMessages.length === 0 ? (
             <div className="flex-1 min-h-0">
