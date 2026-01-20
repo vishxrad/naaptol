@@ -2,12 +2,18 @@
 
 import { ThemeProvider } from "@crayonai/react-ui";
 import "@crayonai/react-ui/styles/index.css";
-import { DashboardScreen } from "./components/DashboardScreen";
 import { StudentDashboard } from "./components/StudentDashboard";
 import { domAnimation, LazyMotion } from "framer-motion";
 import Image from "next/image";
 import { useTheme } from "./hooks/useTheme";
 import { useState } from "react";
+import dynamic from "next/dynamic";
+
+const DashboardScreen = dynamic(
+  () =>
+    import("./components/DashboardScreen").then((mod) => mod.DashboardScreen),
+  { ssr: false }
+);
 
 export interface CardInfo {
   text: string; // card prompt

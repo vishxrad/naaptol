@@ -24,7 +24,7 @@ export const CopilotTray = ({
   onToggleCollapse,
 }: CopilotTrayProps) => {
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
-  const { messages } = useThreadState();
+  const { messages = [] } = useThreadState();
   const [queryTitles, setQueryTitles] = useState<string[]>([]);
 
   const groupedMessages: {
