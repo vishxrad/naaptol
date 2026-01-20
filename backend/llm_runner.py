@@ -1,5 +1,6 @@
 import os
 import json
+import csv
 import asyncio
 from typing import List, Literal, Optional
 from pydantic import BaseModel
@@ -91,6 +92,36 @@ tools: List[ChatCompletionToolParam] = [
                 "required": ["query"]
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "add_transaction",
+            "description": "Add a new transaction to the student transactions file.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "date": {
+                        "type": "string",
+                        "description": "The date of the transaction (e.g., 'MM/DD/YYYY')."
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Description of the transaction."
+                    },
+                    "amount": {
+                        "type": "number",
+                        "description": "The amount of the transaction (positive number)."
+                    },
+                    "transaction_type": {
+                        "type": "string",
+                        "enum": ["credit", "debit"],
+                        "description": "Type of transaction: 'credit' (add money) or 'debit' (spend money)."
+                    }
+                },
+                "required": ["date", "description", "amount", "transaction_type"]
+            }
+        }
     }
 ]
 
@@ -107,6 +138,54 @@ class ChatRequest(BaseModel):
 
     class Config:
         extra = "allow"
+
+async def add_transaction_to_csv(date: str, description: str, amount: float, transaction_type: str):
+    await write_think_item(
+        title="Adding transaction...",
+        description=f"Adding {transaction_type} of ${amount} for '{description}'"
+    )
+
+    try:
+        rows = []
+        with open("student_transactions.csv", "r") as f:
+            reader = csv.DictReader(f)
+            rows = list(reader)
+        
+        last_balance = 0.0
+        if rows:
+            # Handle potential empty strings or malformed data in CSV
+            try:
+                last_balance = float(rows[-1]['Balance'])
+            except ValueError:
+                last_balance = 0.0
+        
+        debit_val = ""
+        credit_val = ""
+        amount = float(amount)
+        
+        if transaction_type.lower() == 'debit':
+            debit_val = f"-{amount:.2f}"
+            new_balance = last_balance - amount
+        else:
+            credit_val = f"{amount:.2f}"
+            new_balance = last_balance + amount
+            
+        new_row = {
+            "Date": date,
+            "Description": description,
+            "Debit": debit_val,
+            "Credit": credit_val,
+            "Balance": f"{new_balance:.2f}"
+        }
+        
+        with open("student_transactions.csv", "a", newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=["Date","Description","Debit","Credit","Balance"])
+            writer.writerow(new_row)
+            
+        return json.dumps({"status": "success", "message": f"Added transaction. New Balance: {new_balance:.2f}"})
+
+    except Exception as e:
+        return json.dumps({"error": str(e)})
 
 async def web_search(query: str):
     await write_think_item(
@@ -247,6 +326,21 @@ async def generate_stream(chat_request: ChatRequest):
                     tool_output = await web_search(query=fn_args.get("query"))
                     print(tool_output)
                     # C. Add the "Tool Result" to history
+                    conversation_history.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call['id'],
+                        "content": tool_output
+                    })
+                    await asyncio.sleep(1)
+                
+                elif fn_name == "add_transaction":
+                    tool_output = await add_transaction_to_csv(
+                        date=fn_args.get("date"),
+                        description=fn_args.get("description"),
+                        amount=fn_args.get("amount"),
+                        transaction_type=fn_args.get("transaction_type")
+                    )
+                    print(tool_output)
                     conversation_history.append({
                         "role": "tool",
                         "tool_call_id": tool_call['id'],
