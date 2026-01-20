@@ -5,7 +5,7 @@ import { MessageLoader } from "../MessageLoader";
 import { withRetry } from "@/app/helpers/retryWithBackoff";
 import { useState, useCallback } from "react";
 
-const MAX_RETRIES = 3
+const MAX_RETRIES = 3;
 
 interface MessageGroupProps {
   queryTitle?: string;
@@ -22,6 +22,42 @@ export const MessageGroup = ({
   const { processMessage } = useThreadActions();
   const [retryAttempts, setRetryAttempts] = useState(0);
   const assistantMessageContent = getAssistantMessageContent(assistantMessage);
+
+  // 1. Implement the onAction handler
+  const handleAction = useCallback(
+    async (event: any) => {
+      const { type, params } = event;
+
+      switch (type) {
+        case "open_url":
+          if (params?.url) {
+            window.open(params.url, "_blank", "noopener,noreferrer");
+          }
+          break;
+
+        default:
+          // Destructure both the AI instruction and the UI label
+          const { llmFriendlyMessage, humanFriendlyMessage } = params || {};
+
+          // We need at least one of them to proceed
+          if (llmFriendlyMessage || humanFriendlyMessage) {
+            await processMessage({
+              type: "prompt",
+              role: "user",
+              // UI Logic: Show the human-friendly label (e.g. "Notifications") 
+              // If that's missing, fall back to the LLM message.
+              message: humanFriendlyMessage || llmFriendlyMessage,
+              
+              // Backend Logic: Pass the full params (including the raw llmFriendlyMessage)
+              // as context so the AI still receives the exact data it needs.
+              context: params, 
+            });
+          }
+          break;
+      }
+    },
+    [processMessage]
+  );
 
   const handleError = useCallback(
     async (error: { code: number; c1Response: string }) => {
@@ -45,14 +81,12 @@ export const MessageGroup = ({
               context: userMessage.context,
             });
           },
-          MAX_RETRIES, // Retry up to 3 times with exponential backoff
+          MAX_RETRIES,
           1000,
           5000
         );
-        // If successful, increment retry count to prevent further retries
         setRetryAttempts(MAX_RETRIES + 1);
       } catch (retryError) {
-        // Increment retry count on failure
         setRetryAttempts((prev) => prev + 1);
         console.error("All retry attempts failed:", retryError);
       }
@@ -77,6 +111,7 @@ export const MessageGroup = ({
           c1Response={assistantMessageContent}
           isStreaming={isRunning || false}
           onError={handleError}
+          onAction={handleAction} // 2. Pass the handler here
         />
       ) : (
         <MessageLoader />
