@@ -26,7 +26,7 @@ export default function Home() {
   return (
     <LazyMotion features={domAnimation}>
       <ThemeProvider
-        mode={theme}
+        mode={theme as "light" | "dark"}
         theme={{ defaultChartPalette: ["#4F46E5", "#7F56D9", "#1882FF"] }}
       >
         <AnimatePresence mode="wait">

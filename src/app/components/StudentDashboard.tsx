@@ -127,8 +127,8 @@ const CalendarView = ({ transactions, onDateClick }: { transactions: any[], onDa
       const dateKey = `${monthStr}/${dayStr}/${currentDate.getFullYear()}`;
       
       const dayTx = txByDate[dateKey] || [];
-      const totalSpent = dayTx.reduce((sum, t) => t.amount < 0 ? sum + Math.abs(t.amount) : sum, 0);
-      const totalIncome = dayTx.reduce((sum, t) => t.amount > 0 ? sum + t.amount : sum, 0);
+      const totalSpent = dayTx.reduce((sum: number, t: { amount: number }) => t.amount < 0 ? sum + Math.abs(t.amount) : sum, 0);
+      const totalIncome = dayTx.reduce((sum: number, t: { amount: number }) => t.amount > 0 ? sum + t.amount : sum, 0);
 
       cells.push(
         <div 
@@ -150,7 +150,7 @@ const CalendarView = ({ transactions, onDateClick }: { transactions: any[], onDa
           </div>
           
           <div className="space-y-1 mt-1">
-            {dayTx.map((tx, idx) => (
+            {dayTx.map((tx: any, idx: number) => (
               <div key={idx} className="flex items-center gap-1.5 text-[10px] text-gray-600 dark:text-gray-300 truncate" title={`${tx.title} ($${tx.amount})`}>
                 <div className={clsx("w-1.5 h-1.5 rounded-full flex-shrink-0", tx.amount > 0 ? "bg-green-500" : "bg-indigo-500")} />
                 <span className="truncate">{tx.title}</span>
