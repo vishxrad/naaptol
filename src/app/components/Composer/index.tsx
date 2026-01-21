@@ -87,7 +87,7 @@ export const Composer = ({
       return;
     }
 
-    fetch("/api/relatedQueries", {
+    fetch("http://127.0.0.1:8000/relatedQueries", {
       method: "POST",
       body: JSON.stringify({
         message: messageText,

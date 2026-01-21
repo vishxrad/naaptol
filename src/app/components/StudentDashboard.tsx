@@ -248,7 +248,7 @@ export const StudentDashboard = ({ onOpenChat }: { onOpenChat?: () => void }) =>
   };
 
   useEffect(() => {
-    fetch('/api/transactions')
+    fetch('http://127.0.0.1:8000/transactions')
       .then(res => res.json())
       .then((data: any[]) => {
         const processedTx = data.map((t, idx) => {

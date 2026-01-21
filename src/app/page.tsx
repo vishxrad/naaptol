@@ -2,7 +2,6 @@
 
 import { ThemeProvider } from "@crayonai/react-ui";
 import "@crayonai/react-ui/styles/index.css";
-import { StudentDashboard } from "./components/StudentDashboard";
 import { domAnimation, LazyMotion, AnimatePresence } from "framer-motion";
 import { useTheme } from "./hooks/useTheme";
 import { useState } from "react";
@@ -14,6 +13,12 @@ import { BankLinkPopup } from "./components/BankLinkPopup";
 const DashboardScreen = dynamic(
   () =>
     import("./components/DashboardScreen").then((mod) => mod.DashboardScreen),
+  { ssr: false }
+);
+
+// Dynamic import for StudentDashboard to prevent SSR issues
+const StudentDashboard = dynamic(
+  () => import('./components/StudentDashboard').then((mod) => mod.StudentDashboard),
   { ssr: false }
 );
 
