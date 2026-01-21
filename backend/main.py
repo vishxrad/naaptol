@@ -3,12 +3,27 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from llm_runner import generate_stream, ChatRequest
 from thesys_genui_sdk.fast_api import with_c1_response
+from thesys_genui_sdk.context import write_content
 from thread_store import thread_store
 from pydantic import BaseModel
 from typing import List, Dict, Any
 import pandas as pd
-
+from openai import AsyncOpenAI
+import nanoid
+import json
+import os
 app = FastAPI()
+
+c1_artifacts_client = AsyncOpenAI(
+    api_key=os.getenv("THESYS_API_KEY"),
+    base_url="https://api.thesys.dev/v1/artifact",
+)
+
+try:
+    with open("student_transactions.csv", "r") as f:
+        csv_content = f.read()
+except FileNotFoundError:
+    csv_content = "No transaction data available."
 
 # --- FIX 1: Add No-Buffering Middleware ---
 # This forces every response to have headers that disable buffering.
@@ -55,6 +70,22 @@ async def chat_endpoint(request: ChatRequest):
     # Ensure your llm_runner.py has 'await asyncio.sleep(0)' 
     # inside the text generation loop as well!
     await generate_stream(request)
+
+@app.post("/generate-spending-wrapped")
+@with_c1_response()
+async def generate_spending_wrapped_endpoint():
+    prompt = f"Create slides summarizing the student's spending for 2025 based on the following transactions: {csv_content}"
+    artifact_id = nanoid.generate(size=10)
+    artifact_stream = await c1_artifacts_client.chat.completions.create(
+        model="c1/artifact/v-20251030",
+        messages=[{"role": "user", "content": prompt}],
+        metadata={"thesys": json.dumps({"c1_artifact_type": "slides", "id": artifact_id})},
+        stream=True,
+    )
+    async for delta in artifact_stream:
+        content = delta.choices[0].delta.content
+        if content:
+            await write_content(content)
 
 # --- Thread CRUD (Unchanged) ---
 

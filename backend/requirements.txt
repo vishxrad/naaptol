@@ -7,3 +7,4 @@ crayonai_stream==0.6.2
 thesys_genui_sdk==0.1.2
 exa-py==1.2.0
 pandas
+nanoid

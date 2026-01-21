@@ -90,3 +90,16 @@ export const getMessages = async (threadId: string): Promise<Message[]> => {
   const response = await fetch(`${API_BASE_URL}/thread/${threadId}/messages`);
   return handleResponse<Message[]>(response);
 };
+
+export const generateSpendingWrapped = async (): Promise<Response> => {
+  const response = await fetch(`${API_BASE_URL}/generate-spending-wrapped`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return response;
+};

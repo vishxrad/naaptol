@@ -3,7 +3,7 @@ import json
 import csv
 import asyncio
 from typing import List, Literal, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
 from dotenv import load_dotenv
 
@@ -16,12 +16,19 @@ from exa_py import Exa
 from thread_store import Message, thread_store
 from thesys_genui_sdk.context import get_assistant_message, write_content, write_think_item
 
+import nanoid
+
 load_dotenv()
 
 # 1. Initialize Clients
 client = AsyncOpenAI(
     api_key=os.getenv("THESYS_API_KEY"),
     base_url="https://api.thesys.dev/v1/embed",
+)
+
+c1_artifacts_client = AsyncOpenAI(
+    api_key=os.getenv("THESYS_API_KEY"),
+    base_url="https://api.thesys.dev/v1/artifact",
 )
 
 
@@ -136,6 +143,18 @@ tools: List[ChatCompletionToolParam] = [
                 "required": ["date", "description", "amount", "transaction_type"]
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "generate_spending_wrapped",
+            "description": "Generate a spending wrapped artifact summarizing the student's spending for the year.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
     }
 ]
 
@@ -152,6 +171,20 @@ class ChatRequest(BaseModel):
 
     class Config:
         extra = "allow"
+
+
+
+class CreatePresentationParams(BaseModel):
+    instructions: str = Field(..., description="The instructions to generate the presentation.")
+
+create_presentation_tool = {
+    "type": "function",
+    "function": {
+        "name": "create_presentation",
+        "description": "Creates a slide presentation based on a instructions.",
+        "parameters": CreatePresentationParams.model_json_schema(),
+    },
+}
 
 async def add_transaction_to_csv(date: str, description: str, amount: float, transaction_type: str):
     await write_think_item(
@@ -200,6 +233,22 @@ async def add_transaction_to_csv(date: str, description: str, amount: float, tra
 
     except Exception as e:
         return json.dumps({"error": str(e)})
+
+async def generate_spending_wrapped():
+    artifact_id = nanoid.generate(size=10)
+    message_id = nanoid.generate(size=10)
+    instructions = f"Create slides summarizing the student's spending for 2025 based on the following transactions: {csv_content}"
+    artifact_stream = await c1_artifacts_client.chat.completions.create(
+        model="c1/artifact/v-20251030",
+        messages=[{"role": "user", "content": instructions}],
+        metadata={"thesys": json.dumps({"c1_artifact_type": "slides", "id": artifact_id})},
+        stream=True,
+    )
+    async for delta in artifact_stream:
+        content = delta.choices[0].delta.content
+        if content:
+            await write_content(content)
+    return f"Spending wrapped created with artifact_id: {artifact_id}, version: {message_id}"
 
 async def web_search(query: str):
     await write_think_item(
@@ -354,6 +403,16 @@ async def generate_stream(chat_request: ChatRequest):
                         amount=fn_args.get("amount"),
                         transaction_type=fn_args.get("transaction_type")
                     )
+                    print(tool_output)
+                    conversation_history.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call['id'],
+                        "content": tool_output
+                    })
+                    await asyncio.sleep(1)
+                
+                elif fn_name == "generate_spending_wrapped":
+                    tool_output = await generate_spending_wrapped()
                     print(tool_output)
                     conversation_history.append({
                         "role": "tool",

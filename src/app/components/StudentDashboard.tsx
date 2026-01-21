@@ -10,11 +10,14 @@ import {
   Plane,
   ChevronLeft,
   ChevronRight,
-  MessageSquare
+  MessageSquare,
+  Sparkles,      // Added for Wrapped Banner
+  ArrowRight     // Added for Wrapped Banner
 } from 'lucide-react';
 import clsx from 'clsx';
-// Import the action hook from crayon core
 import { useThreadActions } from "@crayonai/react-core";
+import { C1Component } from "@thesysai/genui-sdk";
+import * as apiClient from "@/apiClient";
 
 // --- Utility Functions ---
 
@@ -40,7 +43,32 @@ const getCategoryIcon = (category: string) => {
   }
 };
 
-// --- Calendar Component ---
+// --- Components ---
+
+const WrappedBanner = ({ onWatchNow, isGenerating }: { onWatchNow: () => void, isGenerating: boolean }) => (
+  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-violet-600 via-fuchsia-500 to-indigo-600 p-6 shadow-lg text-white mb-2 animate-in fade-in slide-in-from-top-4 duration-700">
+    <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div>
+        <div className="flex items-center gap-2 mb-1">
+          <Sparkles className="w-5 h-5 text-yellow-300 animate-pulse" />
+          <span className="font-bold tracking-wide uppercase text-xs opacity-90">2025 Wrapped</span>
+        </div>
+        <h2 className="text-2xl font-bold mb-1">Your Spending Year in Review</h2>
+        <p className="text-white/90 text-sm max-w-md">
+          Discover your top cravings, wildest weekends, and where all that money actually went.
+        </p>
+      </div>
+      <button onClick={onWatchNow} disabled={isGenerating} className="group px-5 py-2.5 bg-white text-indigo-600 font-bold rounded-full hover:bg-indigo-50 transition-all shadow-md active:scale-95 text-sm whitespace-nowrap flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+        {isGenerating ? "Generating..." : "Watch Now"}
+        <ArrowRight size={16} className={`group-hover:translate-x-1 transition-transform ${isGenerating ? 'animate-spin' : ''}`} />
+      </button>
+    </div>
+    
+    {/* Decorative Elements */}
+    <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+    <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-yellow-400/20 rounded-full blur-xl pointer-events-none" />
+  </div>
+);
 
 const CalendarView = ({ transactions, onDateClick }: { transactions: any[], onDateClick: (date: string) => void }) => {
   const [currentDate, setCurrentDate] = useState(new Date()); 
@@ -179,13 +207,45 @@ const CalendarView = ({ transactions, onDateClick }: { transactions: any[], onDa
 // --- Main Dashboard ---
 
 export const StudentDashboard = ({ onOpenChat }: { onOpenChat?: () => void }) => {
+  const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
   const [allTransactions, setAllTransactions] = useState<any[]>([]);
   const [balance, setBalance] = useState(0);
   const [totalSpent, setTotalSpent] = useState(0);
   const [dailyAvg, setDailyAvg] = useState(0);
+  const [artifact, setArtifact] = useState<string>("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [artifactUrl, setArtifactUrl] = useState<string | null>(null);
 
-  // Hook to control the chat
   const { processMessage } = useThreadActions();
+
+  const handleWatchNow = async () => {
+    setIsGenerating(true);
+    setArtifact("");
+    setArtifactUrl(null);
+    try {
+      const response = await apiClient.generateSpendingWrapped();
+      const reader = response.body?.getReader();
+      if (!reader) {
+        setIsGenerating(false);
+        return;
+      }
+      const decoder = new TextDecoder();
+      let accumulated = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        accumulated += chunk;
+        setArtifact(accumulated);
+      }
+      const urlMatch = accumulated.match(/https?:\/\/[^\s]+/);
+      setArtifactUrl(urlMatch ? urlMatch[0] : null);
+    } catch (error) {
+      console.error("Error generating spending wrapped:", error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   useEffect(() => {
     fetch('/api/transactions')
@@ -208,6 +268,7 @@ export const StudentDashboard = ({ onOpenChat }: { onOpenChat?: () => void }) =>
         });
         
         setAllTransactions(processedTx);
+        setRecentTransactions([...processedTx].reverse().slice(0, 50)); 
         
         if (data.length > 0) {
            setBalance(data[data.length - 1].Balance);
@@ -224,10 +285,8 @@ export const StudentDashboard = ({ onOpenChat }: { onOpenChat?: () => void }) =>
   }, []);
 
   const handleDateClick = (dateStr: string) => {
-    // 1. Filter data for context
     const txForDate = allTransactions.filter(t => t.date === dateStr);
     
-    // 2. Construct Prompt
     let prompt = `Analyze my financial activity on ${dateStr}.`;
     if (txForDate.length > 0) {
       prompt += ` I had ${txForDate.length} transactions:\n`;
@@ -236,14 +295,12 @@ export const StudentDashboard = ({ onOpenChat }: { onOpenChat?: () => void }) =>
       prompt += " I don't see any transactions for this specific day.";
     }
 
-    // 3. Send to Chatbot
     processMessage({
       type: 'prompt',
       role: 'user',
       message: prompt
     });
 
-    // 4. Open the Chat Tray
     if (onOpenChat) onOpenChat();
   };
 
@@ -252,82 +309,90 @@ export const StudentDashboard = ({ onOpenChat }: { onOpenChat?: () => void }) =>
       <div className="max-w-7xl mx-auto space-y-8">
         
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center mb-2">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Student Fund Tracker</h1>
             <p className="text-gray-500 dark:text-gray-400">Welcome back, Alex</p>
           </div>
-          <div className="bg-white dark:bg-gray-800 p-2 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-            <span className="text-sm font-medium text-gray-500 dark:text-gray-400 mr-2">Current Balance:</span>
-            <span className="text-lg font-bold text-gray-900 dark:text-white">${balance.toFixed(2)}</span>
-          </div>
         </div>
 
-        {/* KPI Cards */}
+        {/* 1. Cosmetic Spend Wrapped Banner */}
+        <WrappedBanner onWatchNow={handleWatchNow} isGenerating={isGenerating} />
+
+        {/* Artifact Display */}
+        {(isGenerating || artifact) && (
+          <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Your Spending Wrapped</h3>
+            <C1Component c1Response={artifact} isStreaming={isGenerating} />
+          </div>
+        )}
+
+        {/* 2. Refined KPI Cards (Top 4 Buttons) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <KpiCard 
-            title="Total Budget" 
-            amount="$2,000" 
-            subtext="Monthly Limit" 
+            title="Current Balance" 
+            amount={`$${balance.toFixed(2)}`} 
+            subtext="Hard Limit" 
             icon={Wallet} 
-            trend="+0%" 
+            trend="Fixed" 
             trendUp={true} 
+            accentColor="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
           />
           <KpiCard 
             title="Total Spent" 
             amount={`$${totalSpent.toFixed(2)}`} 
-            subtext={`${ totalSpent > 0 ? ((totalSpent/2000)*100).toFixed(0) : 0 }% of budget`} 
+            subtext={`${ totalSpent > 0 ? ((totalSpent/2000)*100).toFixed(0) : 0 }% used`} 
             icon={CreditCard} 
-            trend="" 
+            trend="+12%" 
             trendUp={false} 
-            color="text-orange-600"
+            accentColor="bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400"
           />
           <KpiCard 
-            title="Remaining" 
-            amount={`$${(2000 - totalSpent).toFixed(2)}`} 
-            subtext="Remaining budget" 
-            icon={DollarSign} 
-            trend="" 
-            trendUp={false} 
-          />
-          <KpiCard 
-            title="Daily Avg" 
+            title="Daily Average" 
             amount={`$${dailyAvg.toFixed(2)}`} 
-            subtext="Avg Spending" 
+            subtext="Per day" 
             icon={TrendingUp} 
-            trend="" 
+            trend="Stable" 
             trendUp={true} 
-            color="text-green-600"
+            accentColor="bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400"
+          />
+          <KpiCard 
+            title="Banana Index" 
+            amount={`$${dailyAvg.toFixed(2)}`} 
+            subtext="Per day" 
+            icon={TrendingUp} 
+            trend="Stable" 
+            trendUp={true} 
+            accentColor="bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400"
           />
         </div>
 
-        {/* Calendar Section */}
-        <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+        {/* 3. Calendar Section (Unchanged logic) */}
+        <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
           <CalendarView transactions={allTransactions} onDateClick={handleDateClick} />
-        </div>
-
+        </div> 
       </div>
     </div>
   );
 };
 
-const KpiCard = ({ title, amount, subtext, icon: Icon, trend, trendUp, color }: any) => {
+const KpiCard = ({ title, amount, subtext, icon: Icon, trend, trendUp, accentColor }: any) => {
   return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-      <div className="flex justify-between items-start">
-        <div>
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
-          <h3 className={clsx("text-2xl font-bold mt-1 mb-1", color || "text-gray-900 dark:text-white")}>{amount}</h3>
+    <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow relative overflow-hidden">
+      <div className="flex justify-between items-start mb-4">
+        <div className={clsx("p-3 rounded-xl", accentColor)}>
+          <Icon size={22} />
         </div>
-        <div className="p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
-          <Icon size={20} className="text-gray-600 dark:text-gray-300" />
+        <div className={clsx("px-2.5 py-1 rounded-full text-xs font-semibold", trendUp ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400" : "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400")}>
+          {trend}
         </div>
       </div>
-      <div className="flex items-center gap-2 mt-2">
-        <span className={clsx("text-xs font-medium px-2 py-0.5 rounded-full", trendUp ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>
-          {trend}
-        </span>
-        <span className="text-xs text-gray-500 dark:text-gray-400">{subtext}</span>
+      <div>
+        <h3 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{amount}</h3>
+        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-1">{title}</p>
+      </div>
+      <div className="mt-3 pt-3 border-t border-gray-50 dark:border-gray-700/50 flex items-center gap-2">
+         <span className="text-xs text-gray-400 dark:text-gray-500">{subtext}</span>
       </div>
     </div>
   );
