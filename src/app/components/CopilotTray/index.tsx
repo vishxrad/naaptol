@@ -98,15 +98,15 @@ export const CopilotTray = ({
                 Ask Copilot
               </span>
               <span className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
-                Analyze data, summarize info, or draft content...
+                Ask whatever you need help with...
               </span>
             </div>
 
             {/* Shortcut Badge */}
-            <div className="hidden sm:flex items-center gap-1 pl-2 pr-2 py-1 rounded-md bg-zinc-100 dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 shrink-0">
+            {/* <div className="hidden sm:flex items-center gap-1 pl-2 pr-2 py-1 rounded-md bg-zinc-100 dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 shrink-0">
                 <Command size={10} className="text-zinc-500 dark:text-zinc-400" />
                 <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400">K</span>
-            </div>
+            </div> */}
             
             {/* Mobile Arrow Hint */}
             <div className="sm:hidden text-zinc-400">

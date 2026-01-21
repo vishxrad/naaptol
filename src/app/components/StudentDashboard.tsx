@@ -276,6 +276,14 @@ export const StudentDashboard = ({ onOpenChat }: { onOpenChat?: () => void }) =>
   const [artifact, setArtifact] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [artifactUrl, setArtifactUrl] = useState<string | null>(null);
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentDate(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const { processMessage } = useThreadActions();
 
@@ -367,16 +375,27 @@ export const StudentDashboard = ({ onOpenChat }: { onOpenChat?: () => void }) =>
     if (onOpenChat) onOpenChat();
   };
 
+  const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
+  const fullDate = currentDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const timeString = currentDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
   return (
     <div className="flex-1 h-full overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6 md:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         
         {/* Header */}
-        <div className="mb-8">
-          <p className="text-[24px] text-gray-500 dark:text-gray-400 font-medium">Welcome back,</p>
-          <h1 className="text-[80px] leading-none font-black text-gray-900 dark:text-white tracking-tight mt-1">
-            Alex
-          </h1>
+        <div className="mb-8 flex justify-between items-end">
+          <div>
+            <p className="text-[24px] text-gray-500 dark:text-gray-400 font-medium">Welcome back,</p>
+            <h1 className="text-[80px] leading-none font-black text-gray-900 dark:text-white tracking-tight mt-1">
+              Alex
+            </h1>
+          </div>
+          <div className="mb-4 text-right">
+             <p className="text-[40px] font-black text-white-600 dark:text-white-400">{dayName}</p>
+             <p className="text-xl font-medium text-gray-500 dark:text-gray-400 pb-2">{fullDate}</p>
+             <p className="text-xl font-medium text-gray-400 dark:text-gray-500">{timeString}</p>
+          </div>
         </div>
 
         {/* 1. Cosmetic Spend Wrapped Banner */}
