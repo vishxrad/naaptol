@@ -117,10 +117,12 @@ const CalendarView = ({ transactions, onDateClick }: { transactions: any[], onDa
   const renderCalendarCells = () => {
     const cells = [];
     
+    // Empty cells for previous month
     for (let i = 0; i < firstDay; i++) {
-      cells.push(<div key={`empty-${i}`} className="min-h-[100px] bg-gray-50/50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50" />);
+      cells.push(<div key={`empty-${i}`} className="min-h-[150px] bg-gray-50/30 dark:bg-gray-800/20 border border-dashed border-gray-100 dark:border-gray-800" />);
     }
 
+    // Day cells
     for (let day = 1; day <= daysInMonth; day++) {
       const monthStr = String(currentDate.getMonth() + 1).padStart(2, '0');
       const dayStr = String(day).padStart(2, '0');
@@ -130,41 +132,97 @@ const CalendarView = ({ transactions, onDateClick }: { transactions: any[], onDa
       const totalSpent = dayTx.reduce((sum: number, t: { amount: number }) => t.amount < 0 ? sum + Math.abs(t.amount) : sum, 0);
       const totalIncome = dayTx.reduce((sum: number, t: { amount: number }) => t.amount > 0 ? sum + t.amount : sum, 0);
 
+      // Limit to 4 icons now since they are larger
+      const displayTx = dayTx.slice(0, 4); 
+      const remainingTx = dayTx.length - 4;
+      const hasActivity = dayTx.length > 0;
+
       cells.push(
         <div 
           key={day} 
           onClick={() => onDateClick(dateKey)}
-          className="min-h-[100px] p-2 border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-gray-700/80 transition-all cursor-pointer relative group"
+          className={clsx(
+            "min-h-[150px] p-3 border border-gray-100 dark:border-gray-700/50 bg-white dark:bg-gray-800 transition-all duration-300 relative group flex flex-col justify-between overflow-hidden",
+            hasActivity 
+              ? "cursor-pointer hover:shadow-xl hover:-translate-y-1 hover:border-indigo-200 dark:hover:border-indigo-800 hover:z-10 rounded-2xl" 
+              : "opacity-60 hover:opacity-100"
+          )}
         >
-          <div className="flex justify-between items-start mb-1">
-            <span className={clsx("text-sm font-semibold h-6 w-6 flex items-center justify-center rounded-full transition-colors", 
-              dayTx.length > 0 ? "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white group-hover:bg-blue-100 dark:group-hover:bg-blue-900" : "text-gray-500")}>
+          {/* Top Row: Date & Sparkle */}
+          <div className="flex justify-between items-start z-10">
+            <span className={clsx(
+              "text-sm font-bold flex items-center justify-center rounded-full w-8 h-8 transition-colors", 
+              hasActivity 
+                ? "bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-white group-hover:bg-indigo-600 group-hover:text-white" 
+                : "text-gray-400"
+            )}>
               {day}
             </span>
-            {dayTx.length > 0 && (
-              <div className="text-[10px] font-medium flex flex-col items-end">
-                {totalIncome > 0 && <span className="text-green-600">+{totalIncome.toFixed(0)}</span>}
-                {totalSpent > 0 && <span className="text-red-500">-{totalSpent.toFixed(0)}</span>}
+
+            {/* AI Analyze Hint */}
+            {hasActivity && (
+              <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
+                <div className="bg-indigo-100 dark:bg-indigo-900/50 p-2 rounded-full text-indigo-600 dark:text-indigo-400 shadow-sm">
+                  <Sparkles size={16} className="animate-pulse" />
+                </div>
               </div>
             )}
           </div>
-          
-          <div className="space-y-1 mt-1">
-            {dayTx.map((tx: any, idx: number) => (
-              <div key={idx} className="flex items-center gap-1.5 text-[10px] text-gray-600 dark:text-gray-300 truncate" title={`${tx.title} ($${tx.amount})`}>
-                <div className={clsx("w-1.5 h-1.5 rounded-full flex-shrink-0", tx.amount > 0 ? "bg-green-500" : "bg-indigo-500")} />
-                <span className="truncate">{tx.title}</span>
+
+          {/* Middle: HERO DATA - Centered & Large */}
+          <div className="flex flex-col items-center justify-center gap-1 my-2 z-10">
+            {totalSpent > 0 && (
+              <div className="flex items-start">
+                 <span className="text-gray-400 font-medium text-xs mt-1 mr-0.5">$</span>
+                 <span className="text-3xl font-black text-gray-800 dark:text-white tracking-tighter shadow-sm">
+                   {totalSpent.toFixed(0)}
+                 </span>
               </div>
-            ))}
+            )}
+            
+            {totalIncome > 0 && (
+               <span className="text-[10px] font-bold uppercase tracking-wider text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-full">
+                 +{totalIncome.toFixed(0)} Income
+               </span>
+            )}
+
+            {!totalSpent && !totalIncome && hasActivity && (
+              <span className="text-xs text-gray-400 italic">No Impact</span>
+            )}
           </div>
           
-           {/* Hover Action Hint */}
-           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity bg-white/60 dark:bg-black/40 backdrop-blur-[1px]">
-            <div className="bg-blue-600 text-white text-xs px-2 py-1 rounded shadow-sm flex items-center gap-1">
-               <MessageSquare size={12} />
-               <span>Ask Copilot</span>
+          {/* Bottom: Stacked Logos/Icons (ENHANCED SIZE) */}
+          {hasActivity && (
+            <div className="h-10 flex items-end justify-center z-10 pb-1">
+              <div className="flex -space-x-3 hover:space-x-1 transition-all duration-300">
+                {displayTx.map((tx: any, idx: number) => {
+                  const IconComponent = tx.icon;
+                  return (
+                    <div 
+                      key={idx} 
+                      className={clsx(
+                        "w-9 h-9 rounded-full flex items-center justify-center border-[2.5px] border-white dark:border-gray-800 transition-transform hover:scale-110 hover:z-20 shadow-sm",
+                        tx.amount > 0 ? "bg-green-100 text-green-700" : "bg-indigo-50 text-indigo-600"
+                      )}
+                      title={`${tx.title} ($${tx.amount})`}
+                    >
+                      <IconComponent size={16} strokeWidth={2.5} />
+                    </div>
+                  );
+                })}
+                {remainingTx > 0 && (
+                  <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-700 border-[2.5px] border-white dark:border-gray-800 flex items-center justify-center text-[10px] font-extrabold text-gray-500 z-0">
+                    +{remainingTx}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
+          
+          {/* Decorative Gradient Background on Hover */}
+          {hasActivity && (
+             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-indigo-50/40 dark:to-indigo-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+          )}
         </div>
       );
     }
@@ -172,31 +230,34 @@ const CalendarView = ({ transactions, onDateClick }: { transactions: any[], onDa
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <CreditCard size={20} className="text-indigo-500"/> 
-          Transaction Calendar
-        </h3>
-        <div className="flex items-center gap-4">
-          <span className="font-semibold text-gray-900 dark:text-white w-32 text-center select-none">{monthYearString}</span>
-          <div className="flex bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-0.5">
-            <button onClick={prevMonth} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md text-gray-600 dark:text-gray-300 transition-colors">
-              <ChevronLeft size={18} />
-            </button>
-            <div className="w-px bg-gray-200 dark:bg-gray-600 mx-0.5" />
-            <button onClick={nextMonth} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md text-gray-600 dark:text-gray-300 transition-colors">
-              <ChevronRight size={18} />
-            </button>
-          </div>
+    <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+      {/* Header */}
+      <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-center bg-white dark:bg-gray-800 gap-4">
+        <div>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <CreditCard size={24} className="text-indigo-600"/> 
+            Transaction Calendar
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Review your daily spending habits</p>
+        </div>
+        
+        <div className="flex items-center gap-6 bg-gray-50 dark:bg-gray-900/50 p-2 rounded-2xl">
+          <button onClick={prevMonth} className="p-2 hover:bg-white dark:hover:bg-gray-700 rounded-xl text-gray-600 dark:text-gray-300 transition-all shadow-sm hover:shadow">
+            <ChevronLeft size={20} />
+          </button>
+          <span className="font-bold text-gray-900 dark:text-white w-32 text-center select-none text-lg">{monthYearString}</span>
+          <button onClick={nextMonth} className="p-2 hover:bg-white dark:hover:bg-gray-700 rounded-xl text-gray-600 dark:text-gray-300 transition-all shadow-sm hover:shadow">
+            <ChevronRight size={20} />
+          </button>
         </div>
       </div>
       
-      <div className="p-4">
-        <div className="grid grid-cols-7 text-center text-xs font-semibold text-gray-400 dark:text-gray-500 mb-2 uppercase tracking-wide">
+      {/* Grid */}
+      <div className="p-6 bg-gray-50/50 dark:bg-gray-900/20">
+        <div className="grid grid-cols-7 text-center text-xs font-bold text-gray-400 dark:text-gray-500 mb-4 uppercase tracking-widest">
           <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
         </div>
-        <div className="grid grid-cols-7 border-t border-l border-gray-100 dark:border-gray-700 rounded-lg overflow-hidden">
+        <div className="grid grid-cols-7 gap-3">
           {renderCalendarCells()}
         </div>
       </div>
@@ -309,11 +370,11 @@ export const StudentDashboard = ({ onOpenChat }: { onOpenChat?: () => void }) =>
       <div className="max-w-7xl mx-auto space-y-8">
         
         {/* Header */}
-        <div className="flex justify-between items-center mb-2">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Student Fund Tracker</h1>
-            <p className="text-gray-500 dark:text-gray-400">Welcome back, Alex</p>
-          </div>
+        <div className="mb-8">
+          <p className="text-[24px] text-gray-500 dark:text-gray-400 font-medium">Welcome back,</p>
+          <h1 className="text-[80px] leading-none font-black text-gray-900 dark:text-white tracking-tight mt-1">
+            Alex
+          </h1>
         </div>
 
         {/* 1. Cosmetic Spend Wrapped Banner */}
