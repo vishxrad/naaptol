@@ -248,7 +248,7 @@ export const StudentDashboard = ({ onOpenChat }: { onOpenChat?: () => void }) =>
   };
 
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/transactions')
+    fetch(`https://backend-thesys-0169bda04883.herokuapp.com/transactions`)
       .then(res => res.json())
       .then((data: any[]) => {
         const processedTx = data.map((t, idx) => {

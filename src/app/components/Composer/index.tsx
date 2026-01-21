@@ -87,21 +87,21 @@ export const Composer = ({
       return;
     }
 
-    fetch("http://127.0.0.1:8000/relatedQueries", {
-      method: "POST",
-      body: JSON.stringify({
-        message: messageText,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-  // Ensure we always set an array, even if the API returns null/undefined
-  setSuggestions(data?.relatedQueries || []); 
-})
-.catch(() => {
-  // Good practice: If the fetch fails entirely, reset to empty array
-  setSuggestions([]); 
-});
+//     fetch("http://127.0.0.1:8000/relatedQueries", {
+//       method: "POST",
+//       body: JSON.stringify({
+//         message: messageText,
+//       }),
+//     })
+//       .then((res) => res.json())
+//       .then((data) => {
+//   // Ensure we always set an array, even if the API returns null/undefined
+//   setSuggestions(data?.relatedQueries || []); 
+// })
+// .catch(() => {
+//   // Good practice: If the fetch fails entirely, reset to empty array
+//   setSuggestions([]); 
+// });
   }, [isRunning, messages, messages.length]);
 
   return (

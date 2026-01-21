@@ -35,7 +35,7 @@ export const DashboardScreen = ({ children, ...props }: DashboardScreenProps) =>
     onUpdateMessage: ({ message }) => {
       apiClient.updateMessage(threadListManager.selectedThreadId!, message);
     },
-    apiUrl: "http://127.0.0.1:8000/chat",
+    apiUrl: `https://backend-thesys-0169bda04883.herokuapp.com//chat`,
   });
 
   return (
