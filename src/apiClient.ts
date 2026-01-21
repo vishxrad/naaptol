@@ -1,7 +1,7 @@
 import { Thread } from "@crayonai/react-core";
 import { Message } from "@thesysai/genui-sdk";
 
-const API_BASE_URL = "https://backend-thesys-0169bda04883.herokuapp.com/";
+const API_BASE_URL = "https://backend-thesys-0169bda04883.herokuapp.com";
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
