@@ -12,6 +12,9 @@ from openai import AsyncOpenAI
 import nanoid
 import json
 import os
+import httpx 
+from fastapi.responses import StreamingResponse
+
 app = FastAPI()
 
 c1_artifacts_client = AsyncOpenAI(
@@ -129,6 +132,39 @@ Think:
         content = delta.choices[0].delta.content
         if content:
             await write_content(content)
+
+
+@app.post("/api/export-pdf")
+async def export_artifact_as_pdf(request: Request):
+    data = await request.json()
+    export_params = data.get("exportParams")
+
+    if not export_params:
+        raise HTTPException(status_code=400, detail="exportParams not provided")
+
+    headers = {
+        "Authorization": f"Bearer {os.getenv('THESYS_API_KEY')}",
+        "Content-Type": "application/json",
+    }
+    
+    async with httpx.AsyncClient() as client:
+        # Use a streaming request to handle large files
+        async with client.stream(
+            "POST",
+            "https://api.thesys.dev/v1/artifact/pdf/export",
+            headers=headers,
+            json={"exportParams": export_params},
+        ) as response:
+            response.raise_for_status()
+            
+            # Stream the PDF content back to the client
+            return StreamingResponse(
+                response.aiter_bytes(),
+                media_type="application/pdf",
+                headers={"Content-Disposition": "attachment; filename=spending_wrapped.pdf"}
+            )
+        
+
 
 # --- Thread CRUD (Unchanged) ---
 

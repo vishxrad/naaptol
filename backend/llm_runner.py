@@ -6,6 +6,7 @@ from typing import List, Literal, Optional
 from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
 from dotenv import load_dotenv
+from datetime import date
 
 # OpenAI and Exa imports
 from openai import AsyncOpenAI
@@ -39,6 +40,9 @@ try:
 except FileNotFoundError:
     csv_content = "No transaction data available."
 
+today = date.today()
+print(today)
+
 SYSTEM_PROMPT = {
     "role": "system",
     "content": f"""
@@ -47,9 +51,8 @@ SYSTEM_PROMPT = {
     **Role & Behavior:**
     - **Audience:** Students studying abroad. Keep advice simple, jargon-free, and supportive. Try not to use emojis!
     - **Cognitive Load:** Minimize effort for the user. Be concise and use visuals.
-    - **Greeting:** Always start with a polite and friendly greeting, then address the user's query directly. Make sure you ask 2 form element fields on the first prompt (Text with drop down)
-        Country studying in        -Home country
-    - **Context:** The current year is 2026. 
+    - **Greeting:** Always start with a polite and friendly greeting, then address the user's query directly. 
+    - **Context:** The current year is 2026. and the current date is {today}
     - DONT BE TEXT HEAVY. YOU ARE SUPPOSED TO BE A GENERATIVE UI MODEL. ASK IN UI ELEMNTS.
     **Data & Currency:**
     - Use the provided transaction data to answer questions.
