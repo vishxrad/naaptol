@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useThreadActions } from "@crayonai/react-core";
-import { C1Component } from "@thesysai/genui-sdk";
+import { C1Component, ThemeProvider } from "@thesysai/genui-sdk";
 import * as apiClient from "@/apiClient";
 
 // --- Utility Functions ---
@@ -46,7 +46,7 @@ const getCategoryIcon = (category: string) => {
 // --- Components ---
 
 const WrappedBanner = ({ onWatchNow, isGenerating }: { onWatchNow: () => void, isGenerating: boolean }) => (
-  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-violet-600 via-fuchsia-500 to-indigo-600 p-6 shadow-lg text-white mb-2 animate-in fade-in slide-in-from-top-4 duration-700">
+  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-violet-600 via-fuchsia-500 to-indigo-600 p-6 shadow-lg text-white mb-8 animate-in fade-in slide-in-from-top-4 duration-700">
     <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
       <div>
         <div className="flex items-center gap-2 mb-1">
@@ -299,6 +299,7 @@ export const StudentDashboard = ({ onOpenChat }: { onOpenChat?: () => void }) =>
         accumulated += chunk;
         setArtifact(accumulated);
       }
+      console.log("Full Artifact Response:", accumulated);
       const urlMatch = accumulated.match(/https?:\/\/[^\s]+/);
       setArtifactUrl(urlMatch ? urlMatch[0] : null);
     } catch (error) {
@@ -306,6 +307,7 @@ export const StudentDashboard = ({ onOpenChat }: { onOpenChat?: () => void }) =>
     } finally {
       setIsGenerating(false);
     }
+    
   };
 
   useEffect(() => {
@@ -382,40 +384,48 @@ export const StudentDashboard = ({ onOpenChat }: { onOpenChat?: () => void }) =>
 
         {/* Artifact Display */}
         {(isGenerating || artifact) && (
-          <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Your Spending Wrapped</h3>
-            <C1Component c1Response={artifact} isStreaming={isGenerating} />
-          </div>
-        )}
+  <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+    <h3 className="text-lg font-bold text-gray-900 dark:text-white">Your Spending Wrapped</h3>
+    
+    {/* Update this block */}
+    <ThemeProvider mode="dark">
+      <C1Component c1Response={artifact} isStreaming={isGenerating} />
+    </ThemeProvider>
+
+  </div>
+)}
 
         {/* 2. Refined KPI Cards (Top 4 Buttons) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xl">
           <KpiCard 
-            title="Current Balance" 
-            amount={`$${balance.toFixed(2)}`} 
-            subtext="Hard Limit" 
+            title={`INR ${(balance * 91.5).toFixed(2)}`}
+            amount={`USD ${balance.toFixed(2)}`} 
+            subtext="Current Balance" 
             icon={Wallet} 
             trend="Fixed" 
             trendUp={true} 
             accentColor="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+            description="Your total available balance across all accounts converted to USD."
           />
           <KpiCard 
-            title="Total Spent" 
-            amount={`$${totalSpent.toFixed(2)}`} 
+            title="INR 100000" 
+            amount={`USD ${totalSpent.toFixed(2)}`} 
             subtext={`${ totalSpent > 0 ? ((totalSpent/2000)*100).toFixed(0) : 0 }% used`} 
             icon={CreditCard} 
             trend="+12%" 
             trendUp={false} 
             accentColor="bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400"
+            description="Total amount spent in the current billing cycle compared to your budget limit."
           />
           <KpiCard 
             title="Daily Average" 
-            amount={`$${dailyAvg.toFixed(2)}`} 
+            amount={`USD ${dailyAvg.toFixed(2)}`} 
             subtext="Per day" 
             icon={TrendingUp} 
             trend="Stable" 
             trendUp={true} 
             accentColor="bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400"
+            description="Average daily spending calculated over the last 30 days of activity."
           />
           <KpiCard 
             title="Banana Index" 
@@ -425,6 +435,7 @@ export const StudentDashboard = ({ onOpenChat }: { onOpenChat?: () => void }) =>
             trend="Stable" 
             trendUp={true} 
             accentColor="bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400"
+            description="A fun index comparing your spending habits to the price of bananas."
           />
         </div>
 
@@ -437,24 +448,36 @@ export const StudentDashboard = ({ onOpenChat }: { onOpenChat?: () => void }) =>
   );
 };
 
-const KpiCard = ({ title, amount, subtext, icon: Icon, trend, trendUp, accentColor }: any) => {
+const KpiCard = ({ title, amount, subtext, icon: Icon, trend, trendUp, accentColor, description }: any) => {
   return (
-    <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow relative overflow-hidden">
-      <div className="flex justify-between items-start mb-4">
-        <div className={clsx("p-3 rounded-xl", accentColor)}>
-          <Icon size={22} />
-        </div>
-        <div className={clsx("px-2.5 py-1 rounded-full text-xs font-semibold", trendUp ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400" : "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400")}>
-          {trend}
-        </div>
+    <div className="group bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all relative overflow-hidden h-full min-h-[160px]">
+      
+      {/* Default View */}
+      <div className="transition-opacity duration-300 group-hover:opacity-0">
+          <div className="flex justify-between items-start mb-4">
+            <div className={clsx("p-3 rounded-xl", accentColor)}>
+              <Icon size={22} /> 
+            </div>
+            <div className={clsx("px-2.5 py-1 rounded-full text-xs font-semibold", trendUp ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400" : "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400")}>
+              {trend}
+            </div>
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{amount}</h3>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-1">{title}</p>
+          </div>
+          <div className="mt-3 pt-3 border-t border-gray-50 dark:border-gray-700/50 flex items-center gap-2">
+             <span className="text-xs text-gray-400 dark:text-gray-500">{subtext}</span>
+          </div>
       </div>
-      <div>
-        <h3 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{amount}</h3>
-        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-1">{title}</p>
+
+      {/* Hover View (Explanation) */}
+      <div className="absolute inset-0 p-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white dark:bg-gray-800 text-center">
+        <p className="text-sm font-medium text-gray-600 dark:text-gray-300 leading-relaxed">
+           {description || "This metric helps track your financial health by monitoring key indicators over time."}
+        </p>
       </div>
-      <div className="mt-3 pt-3 border-t border-gray-50 dark:border-gray-700/50 flex items-center gap-2">
-         <span className="text-xs text-gray-400 dark:text-gray-500">{subtext}</span>
-      </div>
+      
     </div>
   );
 };

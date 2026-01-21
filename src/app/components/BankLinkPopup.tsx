@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Landmark, ShieldCheck } from "lucide-react";
+import { Landmark, ShieldCheck, Check } from "lucide-react";
 
 export const BankLinkPopup = ({ onFinish }: { onFinish: () => void }) => {
   return (
@@ -25,14 +25,38 @@ export const BankLinkPopup = ({ onFinish }: { onFinish: () => void }) => {
           </div>
         </div>
 
-        <div className="p-8 pt-6 text-center space-y-6">
-          <div className="space-y-2">
+        <div className="p-8 pt-6 space-y-6">
+          <div className="text-center space-y-2">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
               Connect Your Bank
             </h2>
-            <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-              Link your primary account to automatically track expenses, categorize spending, and get AI-powered financial insights.
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
+              This will allow the application to:
             </p>
+          </div>
+
+          <div className="space-y-4 px-2">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 bg-green-100 dark:bg-green-900/30 p-1 rounded-full shrink-0">
+                <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
+              </div>
+              <div className="text-sm">
+                <p className="font-medium text-gray-900 dark:text-gray-100">Link your primary bank account</p>
+                <p className="text-xs text-gray-500 mt-0.5">Read-only access to track expenses</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 bg-green-100 dark:bg-green-900/30 p-1 rounded-full shrink-0">
+                <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
+              </div>
+              <div className="text-sm">
+                <p className="font-medium text-gray-900 dark:text-gray-100">
+                  Access your location <span className="text-gray-500 font-normal">(United States)</span>
+                </p>
+                <p className="text-xs text-gray-500 mt-0.5">Required for regional compliance</p>
+              </div>
+            </div>
           </div>
 
           <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-xl flex items-start gap-3 text-left">
@@ -47,7 +71,7 @@ export const BankLinkPopup = ({ onFinish }: { onFinish: () => void }) => {
               onClick={onFinish}
               className="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold rounded-xl transition-all shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2"
             >
-              Securely Link Account
+              Accept
             </button>
             <button
               onClick={onFinish}
