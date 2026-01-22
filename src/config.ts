@@ -10,7 +10,7 @@ type Config = {
 export const config: Config = {
   prefilledSuggestions: [
     {
-      text: "Analyze my spending patterns over the last 6 months comparend to an average student",
+      text: "Analyze my spending patterns comparend to an average student",
       type: "analyze",
     },
     {
