@@ -401,7 +401,7 @@ export const StudentDashboard = ({ onOpenChat }: { onOpenChat?: () => void }) =>
           <div>
             <p className="text-[24px] text-gray-500 dark:text-gray-400 font-medium">Welcome back,</p>
             <h1 className="text-[80px] leading-none font-black text-gray-900 dark:text-white tracking-tight mt-1">
-              Alex
+              Athanth
             </h1>
           </div>
           <div className="mb-4 text-right">
@@ -443,7 +443,7 @@ export const StudentDashboard = ({ onOpenChat }: { onOpenChat?: () => void }) =>
           <KpiCard 
             title={`INR ${(totalSpent * 91.5).toFixed(2)}`} 
             amount={`USD ${totalSpent.toFixed(2)}`} 
-            subtext={`Total Budget`} 
+            subtext={`Total Spending`} 
             icon={CreditCard} 
             trend={`${ totalSpent > 0 ? ((totalSpent/2000)*100).toFixed(0) : 0 }% used`} 
             trendUp={false} 
@@ -463,7 +463,7 @@ export const StudentDashboard = ({ onOpenChat }: { onOpenChat?: () => void }) =>
             onClick={() => handleKpiClick("Daily Average Spending", `USD ${dailyAvg.toFixed(2)}`, "Is my daily spending sustainable?")}
           />
           <KpiCard 
-            title="vs 1 banana in USA" 
+            title="equals 1 banana in USA" 
             amount="🍌 12 bananas in India" 
             subtext="Banana Index (PPP)" 
             icon={TrendingUp} 

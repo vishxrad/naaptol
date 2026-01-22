@@ -76,17 +76,18 @@ export const ComposerInput = ({
   return (
     <div
       className={clsx(
-        "flex flex-col gap-m p-m border rounded-[18px] bg-container w-3/4 mx-auto",
-        composerDisabled && "bg-sunk",
-        !isFocused && "border-interactive-el",
-        isFocused && "border-emphasis",
-        dragState.isDragging && "border-[#1882FF] bg-container"
+        "flex flex-col gap-3 p-3 border rounded-3xl w-3/4 mx-auto transition-all duration-200",
+        "bg-white dark:bg-gray-800 shadow-sm",
+        composerDisabled && "bg-gray-50 dark:bg-gray-900/50 opacity-50 cursor-not-allowed",
+        !isFocused && "border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-800",
+        isFocused && "border-indigo-500 ring-1 ring-indigo-500 dark:border-indigo-400 dark:ring-indigo-400",
+        dragState.isDragging && "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 border-dashed"
       )}
       {...dragState.dragHandlers}
       ref={inputContainerRef}
     >
       {(fileState.files.length > 0 || dragState.isDragging) && (
-        <div className="flex flex-wrap gap-s max-h-[125px] overflow-y-auto">
+        <div className="flex flex-wrap gap-2 max-h-[125px] overflow-y-auto px-1">
           {fileState.files.map((file, index) => (
             <AttachedFile
               key={`${file.name}-${index}`}
@@ -101,8 +102,8 @@ export const ComposerInput = ({
       )}
 
       {fileState.files.length > 0 && (
-        <p className="flex self-end items-center justify-between text-xs text-secondary">
-          <span className={clsx(fileState.isAtSizeLimit && "text-danger")}>
+        <p className="flex self-end items-center justify-between text-xs text-gray-400 dark:text-gray-500 px-1">
+          <span className={clsx(fileState.isAtSizeLimit && "text-red-500")}>
             {(fileState.totalFileSize / 1024).toFixed(1)}KB
           </span>
           <span className="ml-[0.5ch]">/ 300KB</span>
@@ -111,7 +112,7 @@ export const ComposerInput = ({
 
       <div
         className={clsx(
-          "flex gap-s",
+          "flex gap-2",
           !isTextAreaExpanded && "items-center justify-between",
           isTextAreaExpanded && "flex-col"
         )}
@@ -119,10 +120,9 @@ export const ComposerInput = ({
         <textarea
           ref={textAreaRef}
           rows={1}
-          placeholder="Type here..."
+          placeholder="Ask anything about your spending..."
           className={clsx(
-            "flex-1 pl-[8px] outline-none resize-none",
-            isFocused && "border-primary"
+            "flex-1 pl-2 outline-none resize-none bg-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 min-h-[40px] py-2",
           )}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
@@ -145,7 +145,7 @@ export const ComposerInput = ({
         />
         <div
           className={clsx(
-            "flex items-center gap-m",
+            "flex items-center gap-2 pr-1",
             isTextAreaExpanded && "self-end"
           )}
         >
@@ -158,24 +158,29 @@ export const ComposerInput = ({
               onChange={fileState.handleFileChange}
               accept=".csv,.xlsx"
             />
-            <IconButton
-              variant="secondary"
-              icon={<Paperclip />}
-              onClick={(e) => {
+            <button
+               onClick={(e) => {
                 e.preventDefault();
                 handleFileInputClick();
               }}
               disabled={composerDisabled}
-              style={{ borderRadius: 10 }}
-            />
+              className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Paperclip size={20} />
+            </button>
           </div>
-          <IconButton
-            variant="primary"
-            icon={isRunning ?? false ? <StopCircle /> : <ArrowUp />}
+          <button
             onClick={isRunning ?? false ? onCancel : handleSubmit}
             disabled={!(isRunning ?? false) && composerDisabled}
-            style={{ borderRadius: 10 }}
-          />
+            className={clsx(
+               "flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200",
+               (textContent.trim() || (isRunning ?? false))
+                 ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0" 
+                 : "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed"
+            )}
+          >
+            {isRunning ?? false ? <StopCircle size={20} /> : <ArrowUp size={22} strokeWidth={2.5} />}
+          </button>
         </div>
       </div>
     </div>

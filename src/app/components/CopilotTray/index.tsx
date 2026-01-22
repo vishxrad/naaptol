@@ -79,40 +79,42 @@ export const CopilotTray = ({
       {isCollapsed ? (
         /* --- Floating Command Capsule --- */
         <div className="absolute bottom-6 left-0 right-0 px-4 flex justify-center pointer-events-auto">
-          <button
-  onClick={onToggleCollapse}
-  className="group relative flex items-center gap-3 w-3/4 h-14 pl-5 pr-4 
+            <button
+            onClick={onToggleCollapse}
+            className="group relative flex items-center gap-3 w-150 h-18 pl-5 pr-4 
              bg-white dark:bg-gray-800 
-             border border-gray-200 dark:border-gray-700/50  {/* Thinner, lighter borders */}
-             rounded-full shadow-lg hover:shadow-xl           {/* Softer shadow */}
+             border-2 border-indigo-500 dark:border-indigo-400
+             rounded-2xl shadow-lg hover:shadow-xl
              transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01] active:scale-[0.98]"
->
+            >
             {/* AI Icon with Gradient Pulse */}
             <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-violet-600 via-fuchsia-500 to-indigo-600 shrink-0">
-   <Sparkles className="text-white w-4 h-4" />
-</div>
+              <Sparkles className="text-white w-4 h-4" />
+            </div>
 
             {/* Text Content */}
             <div className="flex flex-col items-start flex-1 overflow-hidden">
-              <span className="text-sm font-bold text-gray-900 dark:text-white tracking-tight truncate"> {/* Added tracking-tight */}
-  Ask Copilot
-</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                Ask whatever you need help with...
+              <span className="text-sm font-bold text-gray-900 dark:text-white tracking-tight truncate">
+              {" "}
+              {/* Added tracking-tight */}
+              Ask Copilot
+              </span>
+              <span className="text-xs text-gray-400 truncate">
+              Ask whatever you need help with...
               </span>
             </div>
 
             {/* Shortcut Badge */}
             {/* <div className="hidden sm:flex items-center gap-1 pl-2 pr-2 py-1 rounded-md bg-zinc-100 dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 shrink-0">
-                <Command size={10} className="text-zinc-500 dark:text-zinc-400" />
-                <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400">K</span>
+              <Command size={10} className="text-zinc-500 dark:text-zinc-400" />
+              <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400">K</span>
             </div> */}
-            
+
             {/* Mobile Arrow Hint */}
             <div className="sm:hidden text-zinc-400">
-                <ArrowUp size={16} />
+              <ArrowUp size={16} />
             </div>
-          </button>
+            </button>
         </div>
       ) : (
         /* --- Expanded Chat Interface --- */

@@ -10,16 +10,16 @@ type Config = {
 export const config: Config = {
   prefilledSuggestions: [
     {
-      text: "How do I recover from my overspending last month?",
+      text: "Analyze my spending patterns over the last 6 months comparend to an average student",
+      type: "analyze",
+    },
+    {
+      text: "Compare my rent cost to an apartment in Mumbai",
       type: "explain",
     },
     {
-      text: "Can you help me find ways to save more effectively?",
+      text: "How much did I spend on food deliveries vs. dine in?",
       type: "investigate",
-    },
-    {
-      text: "Sanitize my spending so i can send it to my dad",
-      type: "analyze",
     },
   ],
 };

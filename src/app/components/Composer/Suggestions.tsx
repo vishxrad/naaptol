@@ -85,22 +85,26 @@ const Suggestion = ({
 }: SuggestionProps) => {
   return (
     <div
-      className="flex-1 h-20 p-m flex flex-col justify-between border border-interactive-el rounded-2xl shadow-sm hover:shadow-md hover:border-interactive-el-hover cursor-pointer bg-container transition-all duration-200 hover:-translate-y-1"
+      className="flex-1 p-4 flex flex-col gap-3 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm hover:shadow-md hover:border-indigo-300 dark:hover:border-indigo-700 cursor-pointer bg-white dark:bg-gray-800 transition-all duration-200 hover:-translate-y-1"
       onClick={() => {
         suggestionClickHandler(text, title);
       }}
     >
-      <div className="p-2 rounded-lg bg-sunk w-fit">
+      <div className={clsx("p-2 rounded-xl w-fit", 
+        type === "investigate" ? "bg-blue-50 dark:bg-blue-900/20" : 
+        type === "analyze" ? "bg-orange-50 dark:bg-orange-900/20" : 
+        "bg-pink-50 dark:bg-pink-900/20" 
+      )}>
         {type === "investigate" && (
-          <TrendingUp className="text-blue-500" size={20} />
+          <TrendingUp className="text-blue-600 dark:text-blue-400" size={20} />
         )}
-        {type === "analyze" && <Users className="text-orange-500" size={20} />}
+        {type === "analyze" && <Users className="text-orange-600 dark:text-orange-400" size={20} />}
         {type === "explain" && (
-          <BadgePercent className="text-pink-500" size={20} />
+          <BadgePercent className="text-pink-600 dark:text-pink-400" size={20} />
         )}
       </div>
 
-      <span className="text-primary text-sm font-medium line-clamp-3 leading-snug">
+      <span className="text-gray-700 dark:text-gray-200 text-sm font-medium line-clamp-2 leading-relaxed">
         {text}
       </span>
     </div>
