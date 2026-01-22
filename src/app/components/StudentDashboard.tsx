@@ -463,15 +463,15 @@ export const StudentDashboard = ({ onOpenChat }: { onOpenChat?: () => void }) =>
             onClick={() => handleKpiClick("Daily Average Spending", `USD ${dailyAvg.toFixed(2)}`, "Is my daily spending sustainable?")}
           />
           <KpiCard 
-            title={`vs ~${(dailyAvg).toFixed(0)} in US`} 
-            amount={`🍌 ${(dailyAvg * 12).toFixed(0)} in India`} 
+            title="vs 1 banana in USA" 
+            amount="🍌 12 bananas in India" 
             subtext="Banana Index (PPP)" 
             icon={TrendingUp} 
             trend="12.0x" 
             trendUp={true} 
             accentColor="bg-yellow-50 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400"
-            description="Visualizes the Purchasing Power Parity (PPP) gap. Your daily budget buys ~12x more real goods (bananas) in India than in the US."
-            onClick={() => handleKpiClick("Banana Index (PPP)", `${(dailyAvg * 12).toFixed(0)} Bananas (IND) vs ${(dailyAvg).toFixed(0)} Bananas (US)`, "Explain the huge Purchasing Power Parity gap between INR and USD using the 'Banana Index'. Why does my money go so much further in India?")}
+            description="Visualizes the Purchasing Power Parity (PPP) gap. For the price of 1 banana in the US, you can buy ~12 bananas in India."
+            onClick={() => handleKpiClick("Banana Index (PPP)", "12 Bananas (IND) vs 1 Banana (US)", "Explain the huge Purchasing Power Parity (PPP) gap. Why can I buy 12 bananas in India for the price of 1 in the US?")}
           />
         </div>
 

@@ -54,6 +54,7 @@ SYSTEM_PROMPT = {
     - **Greeting:** Always start with a polite and friendly greeting, then address the user's query directly. 
     - **Context:** The current year is 2026. and the current date is {today}
     - DONT BE TEXT HEAVY. YOU ARE SUPPOSED TO BE A GENERATIVE UI MODEL. ASK IN UI ELEMNTS.
+    - Make sure when you reach the end of a prompt, generate some clickable UI elements to continue the conversation.
     **Data & Currency:**
     - Use the provided transaction data to answer questions.
     - Discuss amounts in the transaction currency.
