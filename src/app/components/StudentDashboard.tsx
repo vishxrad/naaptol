@@ -375,6 +375,19 @@ export const StudentDashboard = ({ onOpenChat }: { onOpenChat?: () => void }) =>
     if (onOpenChat) onOpenChat();
   };
 
+  const handleKpiClick = (metric: string, value: string, context?: string) => {
+    let prompt = `Analyze my ${metric}. The value is ${value}.`;
+    if (context) prompt += ` ${context}`;
+    
+    processMessage({
+      type: 'prompt',
+      role: 'user',
+      message: prompt
+    });
+
+    if (onOpenChat) onOpenChat();
+  };
+
   const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
   const fullDate = currentDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   const timeString = currentDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
@@ -425,36 +438,40 @@ export const StudentDashboard = ({ onOpenChat }: { onOpenChat?: () => void }) =>
             trendUp={true} 
             accentColor="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
             description="Your total available balance across all accounts converted to USD."
+            onClick={() => handleKpiClick("Current Balance", `USD ${balance.toFixed(2)}`, "Review if this balance is sufficient for upcoming expenses.")}
           />
           <KpiCard 
-            title="INR 100000" 
+            title={`INR ${(totalSpent * 91.5).toFixed(2)}`} 
             amount={`USD ${totalSpent.toFixed(2)}`} 
-            subtext={`${ totalSpent > 0 ? ((totalSpent/2000)*100).toFixed(0) : 0 }% used`} 
+            subtext={`Total Budget`} 
             icon={CreditCard} 
-            trend="+12%" 
+            trend={`${ totalSpent > 0 ? ((totalSpent/2000)*100).toFixed(0) : 0 }% used`} 
             trendUp={false} 
             accentColor="bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400"
             description="Total amount spent in the current billing cycle compared to your budget limit."
+            onClick={() => handleKpiClick("Total Spending", `USD ${totalSpent.toFixed(2)}`, "Break down my spending categories and suggest where I can save.")}
           />
           <KpiCard 
-            title="Daily Average" 
+            title={`INR ${(dailyAvg * 91.5).toFixed(2)}`} 
             amount={`USD ${dailyAvg.toFixed(2)}`} 
-            subtext="Per day" 
+            subtext="Daily Average" 
             icon={TrendingUp} 
             trend="Stable" 
             trendUp={true} 
             accentColor="bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400"
             description="Average daily spending calculated over the last 30 days of activity."
+            onClick={() => handleKpiClick("Daily Average Spending", `USD ${dailyAvg.toFixed(2)}`, "Is my daily spending sustainable?")}
           />
           <KpiCard 
-            title="Banana Index" 
-            amount={`$${dailyAvg.toFixed(2)}`} 
-            subtext="Per day" 
+            title={`vs ~${(dailyAvg).toFixed(0)} in US`} 
+            amount={`🍌 ${(dailyAvg * 12).toFixed(0)} in India`} 
+            subtext="Banana Index (PPP)" 
             icon={TrendingUp} 
-            trend="Stable" 
+            trend="12.0x" 
             trendUp={true} 
-            accentColor="bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400"
-            description="A fun index comparing your spending habits to the price of bananas."
+            accentColor="bg-yellow-50 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400"
+            description="Visualizes the Purchasing Power Parity (PPP) gap. Your daily budget buys ~12x more real goods (bananas) in India than in the US."
+            onClick={() => handleKpiClick("Banana Index (PPP)", `${(dailyAvg * 12).toFixed(0)} Bananas (IND) vs ${(dailyAvg).toFixed(0)} Bananas (US)`, "Explain the huge Purchasing Power Parity gap between INR and USD using the 'Banana Index'. Why does my money go so much further in India?")}
           />
         </div>
 
@@ -467,9 +484,15 @@ export const StudentDashboard = ({ onOpenChat }: { onOpenChat?: () => void }) =>
   );
 };
 
-const KpiCard = ({ title, amount, subtext, icon: Icon, trend, trendUp, accentColor, description }: any) => {
+const KpiCard = ({ title, amount, subtext, icon: Icon, trend, trendUp, accentColor, description, onClick }: any) => {
   return (
-    <div className="group bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all relative overflow-hidden h-full min-h-[160px]">
+    <div 
+      onClick={onClick}
+      className={clsx(
+        "group bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all relative overflow-hidden h-full min-h-[160px]",
+        onClick ? "cursor-pointer active:scale-95" : ""
+      )}
+    >
       
       {/* Default View */}
       <div className="transition-opacity duration-300 group-hover:opacity-0">
@@ -491,7 +514,8 @@ const KpiCard = ({ title, amount, subtext, icon: Icon, trend, trendUp, accentCol
       </div>
 
       {/* Hover View (Explanation) */}
-      <div className="absolute inset-0 p-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white dark:bg-gray-800 text-center">
+      <div className="absolute inset-0 p-6 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white dark:bg-gray-800 text-center">
+        <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{subtext}</h4>
         <p className="text-sm font-medium text-gray-600 dark:text-gray-300 leading-relaxed">
            {description || "This metric helps track your financial health by monitoring key indicators over time."}
         </p>
