@@ -70,34 +70,34 @@ export const CopilotTray = ({
         }
       }}
       className={clsx(
-        "relative flex flex-col overflow-hidden transition-all duration-500 ease-in-out pointer-events-auto z-50",
-        isCollapsed
-          ? "h-24 bg-transparent w-full pointer-events-none" // Height matches button area, transparent so clicks pass through elsewhere
-          : "h-full w-full bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 shadow-2xl"
-      )}
+  "relative flex flex-col overflow-hidden transition-all duration-500 ease-in-out pointer-events-auto z-50",
+  isCollapsed
+    ? "h-24 bg-transparent w-full pointer-events-none" 
+    : "h-full w-full bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-2xl rounded-t-[32px]" // Added rounded-t-[32px]
+)}
     >
       {isCollapsed ? (
         /* --- Floating Command Capsule --- */
         <div className="absolute bottom-6 left-0 right-0 px-4 flex justify-center pointer-events-auto">
           <button
-            onClick={onToggleCollapse}
-            className="group relative flex items-center gap-3 w-3/4 h-14 pl-5 pr-4 
-                       bg-white dark:bg-zinc-800 
-                       border border-zinc-200 dark:border-zinc-700 
-                       rounded-full shadow-xl hover:shadow-2xl 
-                       transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01] active:scale-[0.98]"
-          >
+  onClick={onToggleCollapse}
+  className="group relative flex items-center gap-3 w-3/4 h-14 pl-5 pr-4 
+             bg-white dark:bg-gray-800 
+             border border-gray-200 dark:border-gray-700/50  {/* Thinner, lighter borders */}
+             rounded-full shadow-lg hover:shadow-xl           {/* Softer shadow */}
+             transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01] active:scale-[0.98]"
+>
             {/* AI Icon with Gradient Pulse */}
-            <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 shrink-0">
-               <Sparkles className="text-white w-4 h-4" />
-            </div>
+            <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-violet-600 via-fuchsia-500 to-indigo-600 shrink-0">
+   <Sparkles className="text-white w-4 h-4" />
+</div>
 
             {/* Text Content */}
             <div className="flex flex-col items-start flex-1 overflow-hidden">
-              <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-100 truncate">
-                Ask Copilot
-              </span>
-              <span className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
+              <span className="text-sm font-bold text-gray-900 dark:text-white tracking-tight truncate"> {/* Added tracking-tight */}
+  Ask Copilot
+</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
                 Ask whatever you need help with...
               </span>
             </div>
@@ -146,7 +146,7 @@ export const CopilotTray = ({
             </div>
           )}
 
-          <div className="p-4 bg-white dark:bg-zinc-900">
+          <div className="p-4 bg-white dark:bg-gray-900">
             <Composer pushQueryTitle={pushQueryTitle} />
           </div>
         </>
