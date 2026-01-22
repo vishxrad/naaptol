@@ -509,7 +509,7 @@ const KpiCard = ({ title, amount, subtext, icon: Icon, trend, trendUp, accentCol
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-1">{title}</p>
           </div>
           <div className="mt-3 pt-3 border-t border-gray-50 dark:border-gray-700/50 flex items-center gap-2">
-             <span className="text-xs text-gray-400 dark:text-gray-500">{subtext}</span>
+             <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{subtext}</span>
           </div>
       </div>
 
