@@ -2,9 +2,9 @@ Based on the code files provided, here is a comprehensive `README.md` for the **
 
 ---
 
-# Naaptol: AI Financial Companion for Students
+# ForexFriend: AI Financial Companion for Students
 
-**Naaptol** is an intelligent financial dashboard and AI assistant designed specifically for international students. It goes beyond simple expense tracking by combining a visual dashboard with a conversational AI that understands Purchasing Power Parity (the "Banana Index"), generates "Spotify Wrapped"-style financial stories, and performs real-time web searches to provide relevant financial advice.
+**ForexFriend** is an intelligent financial dashboard and AI assistant designed specifically for international students. It goes beyond simple expense tracking by combining a visual dashboard with a conversational AI that understands Purchasing Power Parity (the "Banana Index"), generates "Spotify Wrapped"-style financial stories, and performs real-time web searches to provide relevant financial advice.
 
 Built with **Next.js** and **FastAPI**, it leverages the **Thesys GenUI SDK** to stream interactive UI components (artifacts) directly to the user.
 
