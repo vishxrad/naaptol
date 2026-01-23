@@ -23,12 +23,12 @@ const Header: React.FC<HeaderProps> = ({
       <div className="flex items-center gap-s">
         <Image
           src="/agent-logo.svg"
-          alt="FiMarket Copilot"
+          alt="ForexFriend Copilot"
           width={36}
           height={36}
         />
         <p className="text-md text-primary">
-          StudentFin <span className="text-secondary">Copilot</span>
+          ForexFriend <span className="text-secondary">Copilot</span>
         </p>
       </div>
 
