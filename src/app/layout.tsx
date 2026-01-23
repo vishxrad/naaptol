@@ -8,7 +8,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Student Funds Tracker",
+  title: "ForexFriend",
   description: "Track your study abroad funds easily",
 };
 
