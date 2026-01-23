@@ -1,6 +1,4 @@
-Based on the code files provided, here is a comprehensive `README.md` for the **Naaptol** project.
 
----
 
 # ForexFriend: AI Financial Companion for Students
 
